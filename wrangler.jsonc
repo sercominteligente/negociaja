@@ -8,8 +8,24 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "negocia-ja-bd",
+      "database_id": "25ad2242-5226-467d-9f69-bbdd244fb2ca"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "negocia-ja-files"
+    }
+  ],
+  "vars": {
+    "APP_ENVIRONMENT": "production",
+    "DEFAULT_TENANT_ID": "tenant_demo",
+    "ACCESS_TEAM_DOMAIN": "https://bitter-cell-31bf.cloudflareaccess.com",
+    "ACCESS_AUD": "f10e7d76c9531823e695b17cb3c938b5ff6584e68663ec2e65a820d3be85e218"
   }
-  // Bindings já conectados no painel Cloudflare:
-  // D1: DB -> negocia-ja-bd
-  // R2: FILES -> negocia-ja-files
 }
