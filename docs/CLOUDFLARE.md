@@ -17,6 +17,12 @@ A configuração declarada em `wrangler.jsonc` deve ser tratada como fonte de ve
 - Access AUD: `f10e7d76c9531823e695b17cb3c938b5ff6584e68663ec2e65a820d3be85e218`
 - Team domain: `https://bitter-cell-31bf.cloudflareaccess.com`
 
+## Static Assets e autenticação
+
+`assets.run_worker_first` deve permanecer `true`.
+
+Sem essa opção, o comportamento padrão de Static Assets é servir arquivos existentes antes de executar o Worker. Como o mesmo diretório contém landing e painel, isso poderia contornar a validação interna do Access em arquivos como `app.html`. Com `run_worker_first: true`, todas as requisições passam primeiro pelo roteamento e pelos controles de segurança do Worker; o Worker então usa `env.ASSETS.fetch()` apenas quando a requisição já foi classificada/autorizada.
+
 ## Antes de qualquer deploy
 
 1. Confirme que está na branch correta.
@@ -51,9 +57,18 @@ O deploy deve acontecer somente quando a branch validada representar corretament
 
 O código de produção foi publicado manualmente por Wrangler em 19/08/2026, mas o checkout local que continha essa versão foi perdido antes do push. Por isso, o `main` histórico pode estar atrás da versão ativa. Não use falha/sucesso do build automático como autorização para substituir a produção até a recuperação ser concluída.
 
-### Causa concreta de falha encontrada em 19/08/2026
+### Causas concretas encontradas em 19/08/2026
 
-O repositório apontava para `@cloudflare/workers-types@^4.20260818.0`, versão inexistente no npm. A instalação falhava antes mesmo de TypeScript ou Wrangler serem executados. A branch `agent/recovery-foundation` corrigiu a dependência para uma versão publicada (`^5.20260813.1`). Depois da correção, o GitHub Actions concluiu com sucesso:
+O repositório apontava para `@cloudflare/workers-types@^4.20260818.0`, versão inexistente no npm. A instalação falhava antes mesmo de TypeScript ou Wrangler serem executados.
+
+Ao fixar Workers Types v5 com o Wrangler histórico 4.31.0, o npm também revelou conflito de peer dependency. Em vez de usar `--force` ou `--legacy-peer-deps`, a branch foi alinhada a versões publicadas e compatíveis que passaram no CI:
+
+- `jose`: `6.2.8`
+- `@cloudflare/workers-types`: `5.20260813.1`
+- `typescript`: `5.9.2`
+- `wrangler`: `4.123.0`
+
+Após o alinhamento, o GitHub Actions concluiu com sucesso:
 
 - instalação das dependências;
 - `tsc --noEmit`;
