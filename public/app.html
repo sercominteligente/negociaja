@@ -10,144 +10,74 @@
   <link rel="stylesheet" href="/app.css">
 </head>
 <body class="dashboard">
-  <header class="dash-top">
+  <header class="dash-top admin-top">
     <button class="touch menu" id="menuBtn" aria-label="Abrir menu">☰</button>
-    <a class="brand-word" href="/">Negoc<span>IA</span><b>Já!</b></a>
-    <div class="top-actions">
-      <button class="touch search" id="searchBtn" type="button">⌕ <span>Buscar</span></button>
-      <button class="touch user" id="userBadge" type="button" aria-label="Conta" title="Conta autenticada">N</button>
+    <a class="admin-mobile-brand" href="#overview" aria-label="NegocIAJá!">Negoc<span>IA</span><b>Já!</b></a>
+    <div class="admin-top-title"><strong>Resumo</strong><small>Visão geral do seu negócio em tempo real.</small></div>
+    <div class="admin-top-actions">
+      <button class="admin-filter" type="button" disabled title="Filtro por período entra após homologação">▣ Hoje⌄</button>
+      <button class="admin-filter" type="button" disabled title="Multiunidade entra com o módulo multiempresa">Todas as lojas⌄</button>
+      <button class="touch search" id="searchBtn" type="button" aria-label="Abrir IA Assist">⌕</button>
+      <div class="admin-user"><span class="admin-user-avatar" id="operatorInitial">N</span><span><strong id="operatorName">Operador</strong><small id="operatorRole">Administrador</small></span></div>
     </div>
   </header>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="nav-block">
-      <small>NEGOCIAJÁ!</small>
-      <a class="active" href="#overview">⌂ <span>Visão geral</span></a>
-      <a href="#conversations">◉ <span>Conversas</span><em id="conversationBadge">0</em></a>
+  <aside class="sidebar admin-sidebar" id="sidebar">
+    <a class="admin-brand" href="#overview">Negoc<span>IA</span><b>Já!</b></a>
+    <nav class="admin-nav">
+      <a class="active" href="#overview">⌂ <span>Resumo</span></a>
+      <a href="#conversations">▢ <span>Caixa de Entrada</span><em id="conversationBadge">0</em></a>
       <a href="#orders">▣ <span>Pedidos</span></a>
-      <a href="#catalog">◇ <span>Catálogo</span></a>
+      <a href="#catalog">▤ <span>Catálogo</span></a>
       <a href="#customers">♙ <span>Clientes</span></a>
-    </div>
-    <div class="nav-block">
-      <small>INTELIGÊNCIA</small>
-      <a href="#automations">⚡ <span>Automações</span></a>
-      <a href="#assistant">✦ <span>NegocIA Assist</span></a>
-    </div>
-    <div class="sidebar-foot">
-      <i></i>
-      <div><strong id="environmentLabel">Ambiente protegido</strong><small id="environmentHint">Cloudflare Access</small></div>
-    </div>
+      <a href="#sales">↗ <span>Vendas</span></a>
+      <a href="#finance">▰ <span>Financeiro</span></a>
+      <a href="#reports">▥ <span>Relatórios</span></a>
+      <a href="#assistant">✦ <span>IA Assist</span><em>Novo</em></a>
+      <a href="#settings">⚙ <span>Configurações</span></a>
+      <a href="#help">? <span>Ajuda</span></a>
+    </nav>
+    <div class="admin-profile"><span class="admin-user-avatar" id="sideOperatorInitial">N</span><div><strong id="sideOperatorName">NegocIAJá!</strong><small id="sessionEnvironment">Ambiente protegido</small></div></div>
   </aside>
 
-  <main class="dash-main">
-    <section class="welcome" id="overview">
-      <div>
-        <span class="kicker">Bom trabalho 👋</span>
-        <h1>Seu negócio em movimento.</h1>
-        <p>Acompanhe conversas, vendas e operação em um só lugar.</p>
-      </div>
+  <main class="dash-main admin-main">
+    <section class="admin-summary-head" id="overview">
+      <div><span class="kicker">NEGOCIAJÁ!</span><h1>Seu negócio em movimento.</h1><p>Atendimento, pedidos, clientes e operação em um único fluxo.</p></div>
       <button class="btn primary" id="newSaleBtn" type="button">+ Nova venda</button>
     </section>
 
-    <section class="metric-grid">
-      <article><span>Vendas</span><strong id="salesMetric">R$ 0,00</strong><small>volume registrado</small></article>
-      <article><span>Pedidos em aberto</span><strong id="ordersMetric">0</strong><small>aguardando conclusão</small></article>
-      <article><span>Conversas ativas</span><strong id="conversationsMetric">0</strong><small>IA + humano</small></article>
-      <article><span>Clientes</span><strong id="customersMetric">0</strong><small>relacionamentos cadastrados</small></article>
+    <section class="admin-metrics">
+      <article><span class="metric-icon">↗</span><div><span>Vendas registradas</span><strong id="salesMetric">R$ 0,00</strong><small>volume não cancelado</small></div></article>
+      <article><span class="metric-icon green">▣</span><div><span>Pedidos em aberto</span><strong id="ordersMetric">0</strong><small>aguardando conclusão</small></div></article>
+      <article><span class="metric-icon orange">▢</span><div><span>Conversas ativas</span><strong id="conversationsMetric">0</strong><small>IA + humano</small></div></article>
+      <article><span class="metric-icon purple">♙</span><div><span>Clientes</span><strong id="customersMetric">0</strong><small>relacionamentos cadastrados</small></div></article>
     </section>
 
-    <section class="workspace">
-      <article class="panel" id="orders">
-        <div class="panel-head">
-          <div><span class="kicker">Operação</span><h2>Fluxo de vendas</h2></div>
-          <button class="touch soft-button" id="refreshBtn" type="button">↻ Atualizar</button>
-        </div>
-        <div class="kanban" id="kanban"><div class="empty">Carregando fluxo…</div></div>
-      </article>
-
-      <article class="panel ai-panel" id="assistant">
-        <div class="panel-head">
-          <div><span class="kicker cyan">NegocIA Assist</span><h2>Pergunte ao negócio</h2></div>
-          <span class="online"><i></i> online</span>
-        </div>
-        <div class="assistant">
-          <div class="ai-msg" id="aiMessage">Estou conectado ao núcleo do NegocIAJá!. Posso consultar catálogo, pedidos e operação.</div>
-          <div class="quick">
-            <button data-question="pedidos" type="button">Pedidos em aberto</button>
-            <button data-question="catalogo" type="button">Itens do catálogo</button>
-            <button data-question="clientes" type="button">Clientes</button>
-            <button data-question="priorizar" type="button">O que priorizar?</button>
-          </div>
-        </div>
-        <form class="ask" id="askForm">
-          <input id="askInput" placeholder="Pergunte ou solicite uma ação…" autocomplete="off">
-          <button class="touch" aria-label="Enviar">➜</button>
-        </form>
-      </article>
+    <section class="admin-grid-primary">
+      <article class="panel admin-card admin-orders" id="orders"><div class="panel-head"><div><span class="kicker">OPERAÇÃO</span><h2>Pedidos por status</h2></div><button class="admin-link-button" id="refreshBtn" type="button">Atualizar</button></div><div class="kanban" id="kanban"><div class="empty">Carregando fluxo…</div></div></article>
+      <article class="panel admin-card sales-card" id="sales"><div class="panel-head"><div><span class="kicker">VENDAS</span><h2>Visão comercial</h2></div></div><strong class="sales-total" id="salesTotalMirror">R$ 0,00</strong><p>O total acompanha os pedidos registrados no D1 deste ambiente.</p><div class="sales-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small>Gráfico temporal real entra quando o histórico de métricas for implementado.</small></article>
     </section>
 
-    <section class="panel" id="conversations">
-      <div class="panel-head">
-        <div><span class="kicker">Atendimento</span><h2>Caixa de entrada</h2></div>
-        <span class="online"><i></i> D1 conectado</span>
-      </div>
-      <div class="automation-list" id="conversationList"><div class="empty">Carregando conversas…</div></div>
+    <section class="admin-grid-secondary">
+      <article class="panel admin-card" id="conversations"><div class="panel-head"><div><span class="kicker">ATENDIMENTO</span><h2>Caixa de Entrada</h2></div><span class="online"><i></i> D1 conectado</span></div><div class="automation-list" id="conversationList"><div class="empty">Carregando conversas…</div></div></article>
+      <article class="panel admin-card ai-panel admin-ai" id="assistant"><div class="panel-head"><div><span class="kicker cyan">IA ASSIST</span><h2>Pergunte ao negócio</h2></div><span class="online"><i></i> online</span></div><div class="assistant"><div class="ai-msg" id="aiMessage">Estou conectado ao núcleo do NegocIAJá!. Posso consultar catálogo, pedidos e operação.</div><div class="quick"><button data-question="pedidos" type="button">Pedidos em aberto</button><button data-question="catalogo" type="button">Itens do catálogo</button><button data-question="clientes" type="button">Clientes</button><button data-question="priorizar" type="button">O que priorizar?</button></div></div><form class="ask" id="askForm"><input id="askInput" placeholder="O que você deseja saber?" autocomplete="off"><button class="touch" aria-label="Enviar">➜</button></form></article>
+      <article class="panel admin-card" id="catalog"><div class="panel-head"><div><span class="kicker">CATÁLOGO</span><h2>Produtos e serviços</h2></div><button class="admin-link-button" id="newItemBtn" type="button">+ Novo item</button></div><div class="catalog-grid compact" id="catalogGrid"><div class="empty">Carregando catálogo…</div></div></article>
     </section>
 
-    <section class="panel" id="catalog">
-      <div class="panel-head">
-        <div><span class="kicker">Catálogo universal</span><h2>Produtos e serviços</h2></div>
-        <button class="btn primary" id="newItemBtn" type="button">+ Novo item</button>
-      </div>
-      <div class="catalog-grid" id="catalogGrid"><div class="empty">Carregando catálogo…</div></div>
+    <section class="panel admin-card" id="customers"><div class="panel-head"><div><span class="kicker">RELACIONAMENTO</span><h2>Clientes</h2></div><small id="customerCountLabel">0 clientes</small></div><div class="catalog-grid" id="customerGrid"><div class="empty">Carregando clientes…</div></div></section>
+
+    <section class="admin-grid-placeholder">
+      <article class="panel admin-card" id="finance"><span class="kicker">FINANCEIRO</span><h2>Financeiro</h2><p>Recebimentos, cobranças e conciliação entram após a homologação do núcleo comercial.</p><span class="status-pill">Em preparação</span></article>
+      <article class="panel admin-card" id="reports"><span class="kicker">RELATÓRIOS</span><h2>Relatórios</h2><p>Indicadores históricos serão liberados quando houver série temporal suficiente.</p><span class="status-pill">Em preparação</span></article>
+      <article class="panel admin-card" id="settings"><span class="kicker">CONFIGURAÇÕES</span><h2>Configurações</h2><p>Empresa, usuários, canais e integrações serão centralizados aqui.</p><span class="status-pill">Próxima fase</span></article>
     </section>
 
-    <section class="panel" id="customers">
-      <div class="panel-head">
-        <div><span class="kicker">Relacionamento</span><h2>Clientes</h2></div>
-        <small id="customerCountLabel">0 clientes</small>
-      </div>
-      <div class="catalog-grid" id="customerGrid"><div class="empty">Carregando clientes…</div></div>
-    </section>
-
-    <section class="panel" id="automations">
-      <div class="panel-head">
-        <div><span class="kicker">Eventos inteligentes</span><h2>Automações</h2></div>
-        <button class="touch soft-button" type="button" disabled title="Editor visual entra após a homologação do núcleo">Editor em breve</button>
-      </div>
-      <div class="automation-list" id="automationList"><div class="empty">Carregando automações…</div></div>
-    </section>
+    <section class="panel admin-card" id="automations"><div class="panel-head"><div><span class="kicker">EVENTOS INTELIGENTES</span><h2>Automações</h2></div><button class="admin-link-button" type="button" disabled>Editor em breve</button></div><div class="automation-list" id="automationList"><div class="empty">Carregando automações…</div></div></section>
+    <section class="panel admin-card help-card" id="help"><strong>Precisa de ajuda?</strong><span>Esta versão está em homologação. Registre qualquer comportamento inesperado antes da publicação.</span></section>
   </main>
 
-  <div class="modal" id="saleModal" hidden>
-    <div class="modal-box">
-      <button class="modal-close touch" data-close type="button">×</button>
-      <span class="kicker">Nova operação</span>
-      <h2>Nova venda</h2>
-      <form id="saleForm">
-        <label>Cliente<input name="customer_name" required maxlength="160" placeholder="Nome do cliente"></label>
-        <label>WhatsApp<input name="customer_phone" maxlength="40" inputmode="tel" placeholder="5585999999999"></label>
-        <label>Item<select name="catalog_item_id" id="saleItem" required></select></label>
-        <label>Quantidade<input name="qty" type="number" step="1" min="1" max="1000000" value="1" required></label>
-        <button class="btn primary large" type="submit">Criar pedido</button>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal" id="itemModal" hidden>
-    <div class="modal-box">
-      <button class="modal-close touch" data-close type="button">×</button>
-      <span class="kicker">Catálogo universal</span>
-      <h2>Novo item</h2>
-      <form id="itemForm">
-        <label>Nome<input name="name" maxlength="160" required></label>
-        <label>Tipo<select name="item_type"><option value="product">Produto</option><option value="service">Serviço</option><option value="bundle">Combo</option></select></label>
-        <label>Categoria<input name="category" maxlength="120"></label>
-        <label>Preço em reais<input name="price" type="number" min="0" step="0.01" required></label>
-        <button class="btn primary large" type="submit">Salvar item</button>
-      </form>
-    </div>
-  </div>
+  <div class="modal" id="saleModal" hidden><div class="modal-box"><button class="modal-close touch" data-close type="button">×</button><span class="kicker">Nova operação</span><h2>Nova venda</h2><form id="saleForm"><label>Cliente<input name="customer_name" required maxlength="160" placeholder="Nome do cliente"></label><label>WhatsApp<input name="customer_phone" maxlength="40" inputmode="tel" placeholder="5585999999999"></label><label>Item<select name="catalog_item_id" id="saleItem" required></select></label><label>Quantidade<input name="qty" type="number" step="1" min="1" max="1000000" value="1" required></label><button class="btn primary large" type="submit">Criar pedido</button></form></div></div>
+  <div class="modal" id="itemModal" hidden><div class="modal-box"><button class="modal-close touch" data-close type="button">×</button><span class="kicker">Catálogo universal</span><h2>Novo item</h2><form id="itemForm"><label>Nome<input name="name" maxlength="160" required></label><label>Tipo<select name="item_type"><option value="product">Produto</option><option value="service">Serviço</option><option value="bundle">Combo</option></select></label><label>Categoria<input name="category" maxlength="120"></label><label>Preço em reais<input name="price" type="number" min="0" step="0.01" required></label><button class="btn primary large" type="submit">Salvar item</button></form></div></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/app.js"></script>
