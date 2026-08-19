@@ -1,12 +1,25 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "negociaja",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-18",
-  "observability": { "enabled": true },
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "APP_ENVIRONMENT": "production",
+    "DEFAULT_TENANT_ID": "tenant_demo",
+    "ACCESS_TEAM_DOMAIN": "https://bitter-cell-31bf.cloudflareaccess.com",
+    "ACCESS_AUD": "f10e7d76c9531823e695b17cb3c938b5ff6584e68663ec2e65a820d3be85e218"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
+    "html_handling": "none",
     "not_found_handling": "single-page-application",
     "run_worker_first": true
   },
@@ -14,7 +27,8 @@
     {
       "binding": "DB",
       "database_name": "negocia-ja-bd",
-      "database_id": "25ad2242-5226-467d-9f69-bbdd244fb2ca"
+      "database_id": "25ad2242-5226-467d-9f69-bbdd244fb2ca",
+      "migrations_dir": "./migrations"
     }
   ],
   "r2_buckets": [
@@ -23,10 +37,9 @@
       "bucket_name": "negocia-ja-files"
     }
   ],
-  "vars": {
-    "APP_ENVIRONMENT": "production",
-    "DEFAULT_TENANT_ID": "tenant_demo",
-    "ACCESS_TEAM_DOMAIN": "https://bitter-cell-31bf.cloudflareaccess.com",
-    "ACCESS_AUD": "f10e7d76c9531823e695b17cb3c938b5ff6584e68663ec2e65a820d3be85e218"
-  }
+  "routes": [
+    { "pattern": "negociaja.com.br", "custom_domain": true },
+    { "pattern": "www.negociaja.com.br", "custom_domain": true },
+    { "pattern": "app.negociaja.com.br", "custom_domain": true }
+  ]
 }
