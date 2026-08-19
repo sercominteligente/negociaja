@@ -32,35 +32,44 @@ const el = (tag, className, text) => {
 let catalog = [];
 let orders = [];
 let workflows = [];
+let conversations = [];
+let metrics = {};
 
 async function load() {
   try {
-    const [dashboard, catalogData, ordersData, workflowData, automations] = await Promise.all([
+    const [dashboard, catalogData, ordersData, workflowData, automations, conversationData] = await Promise.all([
       api('/api/dashboard'),
       api('/api/catalog'),
       api('/api/orders'),
       api('/api/workflows'),
-      api('/api/automations')
+      api('/api/automations'),
+      api('/api/conversations')
     ]);
 
+    metrics = dashboard || {};
     catalog = Array.isArray(catalogData) ? catalogData : [];
     orders = Array.isArray(ordersData) ? ordersData : [];
     workflows = Array.isArray(workflowData) ? workflowData : [];
+    conversations = Array.isArray(conversationData) ? conversationData : [];
 
-    $('#salesMetric').textContent = money(dashboard.salesCents);
-    $('#ordersMetric').textContent = String(dashboard.openOrders ?? 0);
-    $('#conversationsMetric').textContent = String(dashboard.activeConversations ?? 0);
-    $('#catalogMetric').textContent = String(dashboard.catalogItems ?? 0);
-    $('#conversationBadge').textContent = String(dashboard.activeConversations ?? 0);
+    $('#salesMetric').textContent = money(metrics.salesCents);
+    $('#ordersMetric').textContent = String(metrics.openOrders ?? 0);
+    $('#conversationsMetric').textContent = String(metrics.activeConversations ?? 0);
+    $('#customersMetric').textContent = String(metrics.customers ?? 0);
+    $('#conversationBadge').textContent = String(metrics.activeConversations ?? 0);
+    $('#customerCountLabel').textContent = `${Number(metrics.customers ?? 0)} cliente${Number(metrics.customers ?? 0) === 1 ? '' : 's'}`;
 
     renderCatalog();
     renderKanban();
+    renderCustomers();
+    renderConversations();
     renderAutomations(Array.isArray(automations) ? automations : []);
     fillSaleItems();
   } catch (error) {
     toast(error instanceof Error ? error.message : 'Falha ao carregar o painel.');
-    const empty = $('.empty');
-    if (empty) empty.replaceChildren(document.createTextNode('Não foi possível carregar os dados. Verifique autenticação, migrations e bindings.'));
+    $$('.empty').forEach((empty) => {
+      empty.replaceChildren(document.createTextNode('Não foi possível carregar os dados. Verifique autenticação, migrations e bindings.'));
+    });
   }
 }
 
@@ -72,7 +81,7 @@ function renderCatalog() {
   for (const item of catalog) {
     const card = el('article', 'catalog-card');
     card.append(
-      el('div', 'product-icon', item.item_type === 'service' ? '✦' : '▣'),
+      el('div', 'product-icon', item.item_type === 'service' ? '✦' : item.item_type === 'bundle' ? '◆' : '▣'),
       el('strong', '', item.name || 'Item'),
       el('span', '', `${item.category || item.item_type || 'Item'} • ${money(item.price_cents)}`),
       el('small', '', item.stock_control ? `Estoque: ${Number(item.stock_qty) || 0}` : 'Sem controle de estoque')
@@ -81,7 +90,7 @@ function renderCatalog() {
     const editButton = el('button', 'touch soft-button', 'Editar');
     editButton.type = 'button';
     editButton.disabled = true;
-    editButton.title = 'Edição será habilitada em uma próxima etapa.';
+    editButton.title = 'Edição será habilitada após a homologação do núcleo.';
     card.append(editButton);
     grid.append(card);
   }
@@ -128,9 +137,90 @@ function renderKanban() {
     kanban.append(column);
   }
 
-  if (!orders.length) {
-    kanban.prepend(el('div', 'kanban-note', 'Crie a primeira venda para movimentar o fluxo.'));
+  if (!orders.length) kanban.prepend(el('div', 'kanban-note', 'Crie a primeira venda para movimentar o fluxo.'));
+}
+
+function renderCustomers() {
+  const grid = $('#customerGrid');
+  if (!grid) return;
+  grid.replaceChildren();
+
+  const recent = new Map();
+  for (const order of orders) {
+    const key = order.customer_phone || order.customer_name || order.id;
+    if (!recent.has(key)) recent.set(key, order);
   }
+
+  for (const order of recent.values()) {
+    const card = el('article', 'catalog-card');
+    const initials = String(order.customer_name || 'C')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || '')
+      .join('') || 'C';
+
+    card.append(
+      el('div', 'product-icon', initials),
+      el('strong', '', order.customer_name || 'Cliente'),
+      el('span', '', order.customer_phone || 'Telefone não informado'),
+      el('small', '', `Último pedido: ${order.public_code || 'sem código'} • ${money(order.total_cents)}`)
+    );
+    grid.append(card);
+  }
+
+  if (!recent.size) grid.append(el('div', 'empty', 'Os clientes aparecerão aqui assim que as vendas começarem.'));
+}
+
+function conversationStatus(status) {
+  if (status === 'human') return 'Humano';
+  if (status === 'ai') return 'IA';
+  if (status === 'closed') return 'Encerrada';
+  return status || 'Sem status';
+}
+
+function renderConversations() {
+  const list = $('#conversationList');
+  if (!list) return;
+  list.replaceChildren();
+
+  for (const conversation of conversations) {
+    const row = el('article');
+    const info = el('div');
+    const channel = conversation.channel_name || conversation.channel_type || 'Canal';
+    const person = conversation.customer_name || conversation.customer_phone || conversation.external_id || 'Contato';
+    info.append(
+      el('strong', '', person),
+      el('span', '', `${channel} • ${conversation.customer_phone || 'sem telefone'}`)
+    );
+
+    const state = el('b', conversation.status === 'human' || conversation.status === 'ai' ? 'on' : '', conversationStatus(conversation.status));
+    row.append(info, state);
+
+    if (conversation.status === 'human' || conversation.status === 'ai') {
+      const action = el('button', 'touch soft-button', conversation.status === 'human' ? 'Devolver à IA' : 'Assumir');
+      action.type = 'button';
+      action.addEventListener('click', async () => {
+        action.disabled = true;
+        try {
+          await api(`/api/conversations/${encodeURIComponent(conversation.id)}/takeover`, {
+            method: 'POST',
+            body: JSON.stringify({ mode: conversation.status === 'human' ? 'ai' : 'human' })
+          });
+          toast(conversation.status === 'human' ? 'Conversa devolvida à IA' : 'Atendimento assumido');
+          await load();
+        } catch (error) {
+          toast(error instanceof Error ? error.message : 'Não foi possível alterar o atendimento.');
+          action.disabled = false;
+        }
+      });
+      row.append(action);
+    }
+
+    list.append(row);
+  }
+
+  if (!conversations.length) list.append(el('div', 'empty', 'Nenhuma conversa ativa ou histórica encontrada.'));
 }
 
 function renderAutomations(items) {
@@ -150,6 +240,8 @@ function renderAutomations(items) {
     row.append(info, state);
     list.append(row);
   }
+
+  if (!items.length) list.append(el('div', 'empty', 'Nenhuma automação cadastrada.'));
 }
 
 function fillSaleItems() {
@@ -161,6 +253,15 @@ function fillSaleItems() {
     const option = document.createElement('option');
     option.value = String(item.id || '');
     option.textContent = `${item.name || 'Item'} • ${money(item.price_cents)}`;
+    select.append(option);
+  }
+
+  if (!catalog.length) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'Cadastre um item primeiro';
+    option.disabled = true;
+    option.selected = true;
     select.append(option);
   }
 }
@@ -191,6 +292,11 @@ $$('.sidebar a').forEach((anchor) =>
   })
 );
 
+$('#searchBtn')?.addEventListener('click', () => {
+  $('#assistant')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => $('#askInput')?.focus(), 300);
+});
+
 $('#refreshBtn')?.addEventListener('click', async () => {
   await load();
   toast('Painel atualizado');
@@ -210,6 +316,12 @@ $('#itemForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const data = new FormData(form);
+  const price = Number(data.get('price'));
+
+  if (!Number.isFinite(price) || price < 0) {
+    toast('Informe um preço válido.');
+    return;
+  }
 
   try {
     await api('/api/catalog', {
@@ -218,7 +330,7 @@ $('#itemForm')?.addEventListener('submit', async (event) => {
         name: data.get('name'),
         item_type: data.get('item_type'),
         category: data.get('category'),
-        price_cents: Math.round(Number(data.get('price')) * 100)
+        price_cents: Math.round(price * 100)
       })
     });
     closeModals();
@@ -234,6 +346,17 @@ $('#saleForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const data = new FormData(form);
+  const itemId = String(data.get('catalog_item_id') || '');
+  const qty = Number(data.get('qty'));
+
+  if (!itemId) {
+    toast('Cadastre um item antes de criar uma venda.');
+    return;
+  }
+  if (!Number.isFinite(qty) || qty <= 0) {
+    toast('Informe uma quantidade válida.');
+    return;
+  }
 
   try {
     const order = await api('/api/orders', {
@@ -242,12 +365,7 @@ $('#saleForm')?.addEventListener('submit', async (event) => {
         customer_name: data.get('customer_name'),
         customer_phone: data.get('customer_phone'),
         source: 'panel',
-        items: [
-          {
-            catalog_item_id: data.get('catalog_item_id'),
-            qty: Number(data.get('qty'))
-          }
-        ]
+        items: [{ catalog_item_id: itemId, qty }]
       })
     });
 
@@ -269,10 +387,16 @@ function answer(question) {
     message.textContent = `Existem ${orders.filter((order) => !['done', 'cancelled'].includes(order.status)).length} pedidos em aberto no fluxo atual.`;
   } else if (normalized.includes('cat')) {
     message.textContent = `O catálogo possui ${catalog.length} itens ativos. Posso ajudar a organizar produtos, serviços e combos.`;
+  } else if (normalized.includes('cliente')) {
+    message.textContent = `Há ${Number(metrics.customers ?? 0)} clientes cadastrados e ${orders.length} pedidos recentes carregados nesta visão.`;
+  } else if (normalized.includes('conversa') || normalized.includes('atendimento')) {
+    message.textContent = `Há ${Number(metrics.activeConversations ?? 0)} conversas ativas. Você pode assumir ou devolver atendimentos à IA na Caixa de entrada.`;
   } else if (normalized.includes('prior')) {
-    message.textContent = 'Priorize pedidos novos, negociações sem avanço e clientes próximos da conversão. O Event Engine será responsável por automatizar isso.';
+    const newOrders = orders.filter((order) => order.status === 'new').length;
+    const humanConversations = conversations.filter((conversation) => conversation.status === 'human').length;
+    message.textContent = `Prioridade agora: ${newOrders} pedido(s) novo(s) e ${humanConversations} conversa(s) em atendimento humano. Depois, revise negociações sem avanço.`;
   } else {
-    message.textContent = 'Nesta homologação já consulto dados do D1. A próxima camada conecta o agente de IA apenas às ações autorizadas.';
+    message.textContent = 'Nesta homologação eu já consulto dados reais do D1 do ambiente. A próxima camada conecta inferência de IA apenas às ações autorizadas.';
   }
 }
 
