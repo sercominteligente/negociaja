@@ -3,10 +3,13 @@
   "name": "negociaja",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-19",
-  "observability": {
-    "enabled": true
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
   }
-  // Bindings são conectados no painel Cloudflare:
-  // D1 binding: DB -> negocia-ja-bd
-  // R2 binding: FILES -> negocia-ja-files
+  // Bindings já conectados no painel Cloudflare:
+  // D1: DB -> negocia-ja-bd
+  // R2: FILES -> negocia-ja-files
 }
