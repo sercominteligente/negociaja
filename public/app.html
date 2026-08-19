@@ -15,7 +15,7 @@
     <a class="brand-word" href="/">Negoc<span>IA</span><b>Já!</b></a>
     <div class="top-actions">
       <button class="touch search" id="searchBtn" type="button">⌕ <span>Buscar</span></button>
-      <button class="touch user" type="button" aria-label="Conta">K</button>
+      <button class="touch user" id="userBadge" type="button" aria-label="Conta" title="Conta autenticada">N</button>
     </div>
   </header>
 
@@ -35,7 +35,7 @@
     </div>
     <div class="sidebar-foot">
       <i></i>
-      <div><strong>Ambiente protegido</strong><small>Cloudflare Access</small></div>
+      <div><strong id="environmentLabel">Ambiente protegido</strong><small id="environmentHint">Cloudflare Access</small></div>
     </div>
   </aside>
 
@@ -104,7 +104,7 @@
 
     <section class="panel" id="customers">
       <div class="panel-head">
-        <div><span class="kicker">Relacionamento</span><h2>Clientes recentes</h2></div>
+        <div><span class="kicker">Relacionamento</span><h2>Clientes</h2></div>
         <small id="customerCountLabel">0 clientes</small>
       </div>
       <div class="catalog-grid" id="customerGrid"><div class="empty">Carregando clientes…</div></div>
