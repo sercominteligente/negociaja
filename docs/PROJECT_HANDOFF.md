@@ -21,16 +21,6 @@ NegocIAJá é uma plataforma SaaS multissegmento para atendimento conversacional
 - Branch de recuperação: `agent/recovery-foundation`
 - Draft PR: `#1`
 
-Arquivos principais:
-
-- `src/index.ts`: Worker e API.
-- `public/index.html`: landing.
-- `public/app.html` e `public/app.js`: painel.
-- `public/styles.css`: UI.
-- `wrangler.jsonc`: configuração Cloudflare.
-- `migrations/`: D1.
-- `docs/CLOUDFLARE.md`: operação e rollback.
-
 ## Produção conhecida
 
 - Landing: `https://negociaja.com.br/`
@@ -65,10 +55,11 @@ Queues só entram quando houver trabalho assíncrono real. Durable Objects só e
 - `DB` → D1 `negocia-ja-bd`.
 - `FILES` → R2 `negocia-ja-files`.
 - `ASSETS` → `public/`.
-- `assets.run_worker_first=true` para que autenticação/roteamento do Worker ocorram antes dos arquivos estáticos.
+- `assets.run_worker_first=true` para que autenticação/roteamento ocorram antes dos arquivos estáticos.
 - `APP_ENVIRONMENT=production`.
 - `DEFAULT_TENANT_ID=tenant_demo`.
 - `ACCESS_TEAM_DOMAIN` e `ACCESS_AUD` são identificadores públicos, não secrets.
+- `compatibility_date=2026-08-18`, data suportada pelo workerd validado no CI atual.
 
 Nunca versionar tokens OAuth/API.
 
@@ -82,7 +73,7 @@ Migrations já aplicadas e registradas no D1 remoto:
 
 Não reaplicar nem recriar o banco. Antes de migration futura, listar pendentes e fazer export remoto.
 
-## Segurança reconstruída na branch de recuperação
+## Segurança reconstruída
 
 - JWT do Cloudflare Access validado no Worker com JWKS, issuer e AUD usando `jose`.
 - Worker executa antes dos Static Assets, evitando bypass da autenticação por arquivo estático.
@@ -94,26 +85,40 @@ Não reaplicar nem recriar o banco. Antes de migration futura, listar pendentes 
 - Status de pedido precisa existir no workflow do tenant, exceto `cancelled`.
 - Painel renderiza dados dinâmicos com DOM APIs/`textContent`, não `innerHTML` com dados do D1.
 - CSP, HSTS, `noindex` privado, `nosniff`, frame denial, referrer policy e permissions policy são aplicados pelo Worker.
-
-Ainda falta homologação comportamental antes de considerar esta reconstrução equivalente à produção.
+- `.gitignore` bloqueia `.env`, `.dev.vars`, `.wrangler` e outros estados locais sensíveis.
+- `scripts/security-check.mjs` impede regressões críticas de segurança no CI.
 
 ## Build e CI
 
-`.github/workflows/ci.yml` executa `npm install` e `npm run check` em PRs, sem publicar o Worker. `main` também será validado em push quando o workflow for incorporado.
+`.github/workflows/ci.yml` executa validação sem publicar o Worker.
 
-Causas reais encontradas na antiga falha de build:
+Causas reais encontradas na antiga falha de build/runtime:
 
-- `@cloudflare/workers-types@^4.20260818.0` não existia no npm.
-- Workers Types v5 com Wrangler 4.31.0 gerava conflito de peer dependency quando fixados exatamente.
+1. `@cloudflare/workers-types@^4.20260818.0` não existia no npm.
+2. Workers Types v5 com Wrangler 4.31.0 gerava conflito de peer dependency quando fixados exatamente.
+3. O `compatibility_date` 2026-08-19 era um dia além do suportado pelo workerd empacotado no Wrangler 4.123.0 usado no CI.
 
-A branch foi alinhada, sem `--force`/`--legacy-peer-deps`, às versões que passaram instalação e `npm run check` no GitHub Actions:
+Toolchain validada:
 
 - `jose` `6.2.8`
 - `@cloudflare/workers-types` `5.20260813.1`
 - `typescript` `5.9.2`
 - `wrangler` `4.123.0`
+- `compatibility_date` `2026-08-18`
 
-`npm run check` cobre TypeScript, `node --check public/app.js` e `wrangler deploy --dry-run`.
+O CI atual conclui com sucesso:
+
+- instalação de dependências;
+- TypeScript;
+- sintaxe do painel;
+- regressões de segurança;
+- `wrangler deploy --dry-run`;
+- aplicação das migrations 0001/0002/0003 somente no D1 local do runner;
+- inicialização real do Worker local;
+- smoke test de health, catálogo, criação de item, criação de pedido, cálculo de total, status válido/inválido e Content-Type;
+- prova de que `x-tenant-id` enviado pelo navegador não troca o tenant.
+
+Nenhuma dessas validações escreve no D1 remoto ou publica Worker.
 
 ## Identidade visual
 
@@ -123,12 +128,13 @@ Os binários oficiais de marca (`public/brand`, ícones, manifest e variantes de
 
 ## Ponto de continuidade
 
-1. Recuperar os binários oficiais de identidade visual que ainda não estão no GitHub.
-2. Fazer homologação/preview separado da branch recuperada, sem substituir produção.
-3. Comparar landing, painel, API, Access e D1 com o comportamento da produção.
+1. Recuperar os binários oficiais de identidade visual ainda ausentes do GitHub.
+2. Preparar preview/homologação Cloudflare separado, sem substituir produção.
+3. Comparar landing, painel, API, Access e D1 com a produção.
 4. Implementar associação usuário↔tenant antes de múltiplas empresas reais.
-5. Somente depois decidir sobre merge para `main` e reativar o fluxo automático de produção.
-6. Concluir branding da tela de login do Cloudflare Access sem alterar a política Allow.
+5. Evoluir o painel para os fluxos reais de clientes, conversas, pedidos, catálogo e automações.
+6. Somente depois decidir sobre merge em `main` e pipeline automático de produção.
+7. Concluir branding da tela de login do Cloudflare Access sem alterar a política Allow.
 
 ## Branding desejado do Access
 
