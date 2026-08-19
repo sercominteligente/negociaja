@@ -33,17 +33,21 @@ let catalog = [];
 let orders = [];
 let workflows = [];
 let conversations = [];
+let customers = [];
 let metrics = {};
+let session = {};
 
 async function load() {
   try {
-    const [dashboard, catalogData, ordersData, workflowData, automations, conversationData] = await Promise.all([
+    const [dashboard, catalogData, ordersData, workflowData, automations, conversationData, customerData, sessionData] = await Promise.all([
       api('/api/dashboard'),
       api('/api/catalog'),
       api('/api/orders'),
       api('/api/workflows'),
       api('/api/automations'),
-      api('/api/conversations')
+      api('/api/conversations'),
+      api('/api/customers'),
+      api('/api/session')
     ]);
 
     metrics = dashboard || {};
@@ -51,14 +55,17 @@ async function load() {
     orders = Array.isArray(ordersData) ? ordersData : [];
     workflows = Array.isArray(workflowData) ? workflowData : [];
     conversations = Array.isArray(conversationData) ? conversationData : [];
+    customers = Array.isArray(customerData) ? customerData : [];
+    session = sessionData || {};
 
     $('#salesMetric').textContent = money(metrics.salesCents);
     $('#ordersMetric').textContent = String(metrics.openOrders ?? 0);
     $('#conversationsMetric').textContent = String(metrics.activeConversations ?? 0);
-    $('#customersMetric').textContent = String(metrics.customers ?? 0);
+    $('#customersMetric').textContent = String(metrics.customers ?? customers.length);
     $('#conversationBadge').textContent = String(metrics.activeConversations ?? 0);
-    $('#customerCountLabel').textContent = `${Number(metrics.customers ?? 0)} cliente${Number(metrics.customers ?? 0) === 1 ? '' : 's'}`;
+    $('#customerCountLabel').textContent = `${customers.length} cliente${customers.length === 1 ? '' : 's'}`;
 
+    renderSession();
     renderCatalog();
     renderKanban();
     renderCustomers();
@@ -71,6 +78,30 @@ async function load() {
       empty.replaceChildren(document.createTextNode('Não foi possível carregar os dados. Verifique autenticação, migrations e bindings.'));
     });
   }
+}
+
+function renderSession() {
+  const badge = $('#userBadge');
+  const environmentLabel = $('#environmentLabel');
+  const environmentHint = $('#environmentHint');
+  const email = String(session.email || '');
+  const first = email.trim().charAt(0).toUpperCase() || 'N';
+
+  if (badge) {
+    badge.textContent = first;
+    badge.title = email || 'Conta autenticada';
+  }
+
+  if (session.environment === 'hml') {
+    if (environmentLabel) environmentLabel.textContent = 'Ambiente HML';
+    if (environmentHint) environmentHint.textContent = 'D1 + R2 isolados';
+    document.body.dataset.environment = 'hml';
+    return;
+  }
+
+  if (environmentLabel) environmentLabel.textContent = 'Ambiente protegido';
+  if (environmentHint) environmentHint.textContent = email || 'Cloudflare Access';
+  document.body.dataset.environment = String(session.environment || 'production');
 }
 
 function renderCatalog() {
@@ -145,31 +176,27 @@ function renderCustomers() {
   if (!grid) return;
   grid.replaceChildren();
 
-  const recent = new Map();
-  for (const order of orders) {
-    const key = order.customer_phone || order.customer_name || order.id;
-    if (!recent.has(key)) recent.set(key, order);
-  }
-
-  for (const order of recent.values()) {
+  for (const customer of customers) {
     const card = el('article', 'catalog-card');
-    const initials = String(order.customer_name || 'C')
+    const initials = String(customer.name || 'C')
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase() || '')
       .join('') || 'C';
+    const contact = customer.phone || customer.email || 'Contato não informado';
+    const ordersLabel = `${Number(customer.order_count || 0)} pedido${Number(customer.order_count || 0) === 1 ? '' : 's'}`;
 
     card.append(
       el('div', 'product-icon', initials),
-      el('strong', '', order.customer_name || 'Cliente'),
-      el('span', '', order.customer_phone || 'Telefone não informado'),
-      el('small', '', `Último pedido: ${order.public_code || 'sem código'} • ${money(order.total_cents)}`)
+      el('strong', '', customer.name || 'Cliente'),
+      el('span', '', contact),
+      el('small', '', `${ordersLabel} • ${money(customer.total_spent_cents)}`)
     );
     grid.append(card);
   }
 
-  if (!recent.size) grid.append(el('div', 'empty', 'Os clientes aparecerão aqui assim que as vendas começarem.'));
+  if (!customers.length) grid.append(el('div', 'empty', 'Os clientes aparecerão aqui assim que as vendas começarem.'));
 }
 
 function conversationStatus(status) {
@@ -297,6 +324,10 @@ $('#searchBtn')?.addEventListener('click', () => {
   setTimeout(() => $('#askInput')?.focus(), 300);
 });
 
+$('#userBadge')?.addEventListener('click', () => {
+  toast(session.email ? `Conectado como ${session.email}` : `Ambiente ${session.environment || 'protegido'}`);
+});
+
 $('#refreshBtn')?.addEventListener('click', async () => {
   await load();
   toast('Painel atualizado');
@@ -388,7 +419,7 @@ function answer(question) {
   } else if (normalized.includes('cat')) {
     message.textContent = `O catálogo possui ${catalog.length} itens ativos. Posso ajudar a organizar produtos, serviços e combos.`;
   } else if (normalized.includes('cliente')) {
-    message.textContent = `Há ${Number(metrics.customers ?? 0)} clientes cadastrados e ${orders.length} pedidos recentes carregados nesta visão.`;
+    message.textContent = `Há ${customers.length} clientes cadastrados. O valor acumulado exibido em cada cartão desconsidera pedidos cancelados.`;
   } else if (normalized.includes('conversa') || normalized.includes('atendimento')) {
     message.textContent = `Há ${Number(metrics.activeConversations ?? 0)} conversas ativas. Você pode assumir ou devolver atendimentos à IA na Caixa de entrada.`;
   } else if (normalized.includes('prior')) {
@@ -396,7 +427,7 @@ function answer(question) {
     const humanConversations = conversations.filter((conversation) => conversation.status === 'human').length;
     message.textContent = `Prioridade agora: ${newOrders} pedido(s) novo(s) e ${humanConversations} conversa(s) em atendimento humano. Depois, revise negociações sem avanço.`;
   } else {
-    message.textContent = 'Nesta homologação eu já consulto dados reais do D1 do ambiente. A próxima camada conecta inferência de IA apenas às ações autorizadas.';
+    message.textContent = `Nesta ${session.environment === 'hml' ? 'homologação' : 'sessão'} eu já consulto dados do D1 do ambiente. A próxima camada conecta inferência de IA apenas às ações autorizadas.`;
   }
 }
 
