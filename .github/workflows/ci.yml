@@ -12,7 +12,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     env:
       WRANGLER_SEND_METRICS: "false"
     steps:
@@ -29,3 +29,35 @@ jobs:
 
       - name: Validate project
         run: npm run check
+
+      - name: Apply D1 migrations locally
+        run: npm run db:local
+
+      - name: Smoke test Worker and D1 locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler dev \
+            --port 8787 \
+            --var APP_ENVIRONMENT:development \
+            --var DEFAULT_TENANT_ID:tenant_demo \
+            > /tmp/negociaja-wrangler.log 2>&1 &
+          WRANGLER_PID=$!
+          trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
+
+          READY=0
+          for _ in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8787/api/health > /dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$READY" -ne 1 ]; then
+            echo "Worker did not become ready"
+            cat /tmp/negociaja-wrangler.log
+            exit 1
+          fi
+
+          node scripts/smoke-test.mjs
