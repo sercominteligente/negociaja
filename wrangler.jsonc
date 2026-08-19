@@ -41,5 +41,28 @@
     { "pattern": "negociaja.com.br", "custom_domain": true },
     { "pattern": "www.negociaja.com.br", "custom_domain": true },
     { "pattern": "app.negociaja.com.br", "custom_domain": true }
-  ]
+  ],
+  "env": {
+    "hml": {
+      "name": "negociaja-hml",
+      "workers_dev": true,
+      "preview_urls": true,
+      "routes": [],
+      "vars": {
+        "APP_ENVIRONMENT": "hml",
+        "DEFAULT_TENANT_ID": "tenant_demo",
+        "HML_USERNAME": "homologacao"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "FILES"
+        }
+      ]
+    }
+  }
 }
