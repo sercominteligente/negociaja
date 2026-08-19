@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "negociaja",
   "main": "src/index.ts",
-  "compatibility_date": "2026-08-19",
+  "compatibility_date": "2026-08-18",
   "observability": { "enabled": true },
   "assets": {
     "directory": "./public",
