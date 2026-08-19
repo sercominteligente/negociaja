@@ -1,16 +1,22 @@
 # NegocIAJá!
 
-**Quer vender mais? NegocIAJá!**
+Plataforma SaaS multissegmento para atendimento, catálogo, pedidos, vendas, automações e operação.
 
-Plataforma SaaS independente para atendimento conversacional, catálogo adaptável, pedidos, vendas, automações e operação multissegmento.
+## Estado atual
 
-## Infraestrutura inicial
+A produção está ativa no Cloudflare, mas o checkout local que gerou a versão publicada em 19/08/2026 foi perdido antes do push. A recuperação está isolada na branch `agent/recovery-foundation` e no Draft PR #1.
 
-- Cloudflare Workers
-- D1: `negocia-ja-bd`
-- R2: `negocia-ja-files`
-- Domínios: `negociaja.com.br`, `www.negociaja.com.br`, `app.negociaja.com.br`
+Antes de alterar, mesclar ou publicar, leia:
 
-## Status
+- `AGENTS.md`
+- `docs/PROJECT_HANDOFF.md`
+- `docs/CLOUDFLARE.md`
 
-Bootstrap inicial do projeto em andamento.
+Validação segura:
+
+```bash
+npm install
+npm run check
+```
+
+Não recrie Worker, D1, R2, Access ou domínios para corrigir build/configuração.
