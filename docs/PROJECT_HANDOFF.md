@@ -18,6 +18,7 @@ NegocIAJá é uma plataforma SaaS multissegmento para atendimento conversacional
 - Repositório: `https://github.com/sercominteligente/negociaja`
 - Branch principal: `main`
 - Branch de recuperação: `agent/recovery-foundation`
+- Draft PR de recuperação: `#1`
 
 Arquivos principais:
 
@@ -79,21 +80,26 @@ Migrations já aplicadas e registradas no D1 remoto:
 
 Não reaplicar nem recriar o banco. Antes de migration futura, listar pendentes e fazer export remoto.
 
-## Segurança esperada da versão de produção
+## Segurança reconstruída na branch de recuperação
 
-O handoff original registrava os seguintes controles na versão publicada manualmente, embora esse código exato tenha sido perdido localmente e ainda precise ser reconstruído no GitHub:
+A branch `agent/recovery-foundation` agora reconstrói os controles descritos pelo handoff original:
 
-- `app.negociaja.com.br` protegido pelo Access.
-- Validação criptográfica do JWT de Access usando JWKS e AUD.
-- API pública em raiz e `www` respondendo 404.
-- `/app` em raiz e `www` redirecionando para o hostname protegido.
-- Tenant não vindo de header controlado pelo navegador.
-- Mutations exigindo origem válida e JSON, com limite de corpo.
-- Entradas, quantidades, status e valores validados.
-- DOM montado com `textContent` para evitar XSS armazenado.
-- CSP, HSTS, `noindex`, `nosniff`, frame denial e permissions policy.
+- `app.negociaja.com.br` exige JWT do Cloudflare Access também dentro do Worker.
+- JWT validado criptograficamente com JWKS, issuer e AUD usando `jose`.
+- API em `negociaja.com.br` e `www.negociaja.com.br` responde 404.
+- `/app` na raiz e em `www` redireciona ao hostname protegido.
+- Tenant não é mais aceito pelo header `x-tenant-id`; enquanto não existir associação usuário↔tenant, usa `DEFAULT_TENANT_ID` no servidor.
+- Mutations exigem origem `https://app.negociaja.com.br`, `application/json` e corpo máximo de 64 KiB em produção.
+- Nomes, enums, quantidades, estoque, status e valores possuem validação de servidor.
+- `public/app.js` não envia tenant pelo navegador e renderiza dados dinâmicos com `textContent`/DOM APIs, sem `innerHTML` com dados do D1.
+- CSP, HSTS, `noindex` no conteúdo privado, `nosniff`, frame denial, referrer policy e permissions policy são aplicados pelo Worker.
+- O status de pedido precisa pertencer ao workflow do tenant, exceto `cancelled`.
 
-Esses itens são requisitos de recuperação, não devem ser presumidos como presentes no `main` atual.
+Essa reconstrução ainda não equivale à produção até passar CI/dry-run e homologação. Não fazer merge nem deploy apenas com base nesta seção.
+
+## Validação automatizada de recuperação
+
+Foi criado `.github/workflows/ci.yml` na branch de recuperação. O workflow executa `npm install` e `npm run check`, que cobre TypeScript, sintaxe do JavaScript do painel e `wrangler deploy --dry-run`. Ele não publica o Worker.
 
 ## Comandos seguros
 
@@ -111,12 +117,14 @@ npm.cmd run deploy
 
 ## Ponto de continuidade
 
-1. Recuperar no GitHub a configuração reproduzível de Wrangler e scripts de validação.
-2. Reconstruir os controles de segurança da versão de produção em branch isolada.
-3. Validar build/dry-run antes de qualquer merge para `main`.
-4. Corrigir o pipeline de Workers Builds somente depois que o GitHub representar a aplicação correta.
-5. Concluir branding da tela de login do Cloudflare Access.
-6. Criar homologação separada antes de dados reais e múltiplos tenants.
+1. Aguardar e corrigir qualquer falha do CI da branch de recuperação.
+2. Comparar a branch recuperada com o comportamento real da produção sem alterar produção.
+3. Recuperar/aplicar a identidade visual pública ainda ausente no GitHub, se necessário.
+4. Somente depois validar preview/homologação e decidir sobre merge para `main`.
+5. Corrigir o pipeline de Workers Builds quando o GitHub representar a aplicação correta.
+6. Concluir branding da tela de login do Cloudflare Access.
+7. Criar homologação separada antes de dados reais e múltiplos tenants.
+8. Implementar associação usuário↔tenant antes de onboarding multiempresa.
 
 ## Branding desejado do Access
 
