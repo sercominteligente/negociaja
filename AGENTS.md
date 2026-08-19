@@ -15,6 +15,8 @@ Antes de alterar o projeto, leia:
 - Não aplicar migrations remotas sem listar pendentes e revisar o SQL.
 - Não versionar tokens, cookies, credenciais OAuth ou API keys.
 - Fazer mudanças Cloudflare primeiro em branch isolada e validar com dry-run.
+- Exigir CI verde antes de merge ou deploy.
+- Não publicar diretamente a branch de recuperação em produção sem homologação.
 - Preservar rollback do Worker e lembrar que rollback não reverte D1.
 - Não adicionar KV, Queues, Durable Objects, Vectorize, Workers AI ou AI Gateway sem caso de uso implementado.
 
@@ -26,7 +28,13 @@ Um único Cloudflare Worker com Static Assets, D1 e R2.
 - `DB` → D1 `negocia-ja-bd`
 - `FILES` → R2 `negocia-ja-files`
 
-Landing pública em raiz/`www`; painel em `app.negociaja.com.br` protegido por Cloudflare Access.
+Landing pública em raiz/`www`; painel em `app.negociaja.com.br` protegido por Cloudflare Access. O Worker da branch de recuperação também valida o JWT do Access antes de servir painel/API em produção.
+
+## Estado da recuperação
+
+A recuperação está em `agent/recovery-foundation` e no Draft PR #1. O checkout local que produziu a versão ativa de 19/08/2026 foi perdido antes do push, então o `main` histórico não deve ser usado como snapshot exato de produção.
+
+O CI da branch executa instalação, TypeScript, `node --check public/app.js` e `wrangler deploy --dry-run`, sem publicar.
 
 ## Validação mínima
 
@@ -37,4 +45,4 @@ npm.cmd run check
 npm.cmd run db:remote:list
 ```
 
-Se qualquer comando falhar, não implantar.
+Além disso, confirme CI verde e homologação comportamental. Se qualquer etapa falhar, não implantar.
