@@ -8,38 +8,39 @@ Atualizado em 19 de agosto de 2026. Este é o primeiro arquivo que qualquer novo
 2. Preserve os IDs e nomes Cloudflare registrados abaixo. Não recrie D1, R2, Worker, Access ou domínios.
 3. Consulte a produção antes de qualquer mutação e mantenha a versão anterior disponível para rollback.
 4. Execute `npm.cmd install` apenas quando necessário e depois `npm.cmd run check`.
+5. Exija CI verde e homologação antes de merge/deploy.
 
 ## Objetivo do produto
 
-NegocIAJá é uma plataforma SaaS multissegmento para atendimento conversacional, catálogo, pedidos, vendas, automações e operação. A landing é pública; o painel e a API devem permanecer protegidos pelo Cloudflare Access.
+NegocIAJá é uma plataforma SaaS multissegmento para atendimento conversacional, catálogo, pedidos, vendas, automações e operação. A landing é pública; o painel e a API são privados e protegidos pelo Cloudflare Access.
 
 ## Repositório
 
 - Repositório: `https://github.com/sercominteligente/negociaja`
 - Branch principal: `main`
 - Branch de recuperação: `agent/recovery-foundation`
-- Draft PR de recuperação: `#1`
+- Draft PR: `#1`
 
 Arquivos principais:
 
 - `src/index.ts`: Worker e API.
-- `public/index.html`: landing page.
+- `public/index.html`: landing.
 - `public/app.html` e `public/app.js`: painel.
 - `public/styles.css`: UI.
 - `wrangler.jsonc`: configuração Cloudflare.
-- `migrations/`: esquema e dados iniciais do D1.
+- `migrations/`: D1.
 - `docs/CLOUDFLARE.md`: operação e rollback.
 
 ## Produção conhecida
 
 - Landing: `https://negociaja.com.br/`
 - Landing alternativa: `https://www.negociaja.com.br/`
-- Painel protegido: `https://app.negociaja.com.br/`
+- Painel: `https://app.negociaja.com.br/`
 - Worker: `negociaja`
 - Versão ativa registrada no handoff local perdido: `1bfd75f2-f9c9-479c-8e91-de53767ea2db`
 - Versão anterior estável: `8a0f607e-712f-4347-b48a-81a86142443a`
 
-A produção foi publicada manualmente por Wrangler e estava funcional quando o handoff original foi escrito. O código local que gerou essa versão foi perdido antes de chegar ao GitHub; portanto, não assumir que `main` representa exatamente a produção.
+A produção foi publicada manualmente por Wrangler. O checkout local que produziu essa versão foi perdido antes do push. Portanto, não assumir que `main` representa exatamente a produção.
 
 ## Inventário Cloudflare
 
@@ -55,7 +56,7 @@ Não existem atualmente Pages, KV, Queues, Durable Objects, Vectorize ou AI Gate
 
 ## Arquitetura decidida
 
-Usar um único Cloudflare Worker com Static Assets, D1 e R2. Landing, painel e API compartilham o deploy. D1 guarda dados relacionais; R2 fica reservado a anexos.
+Um único Cloudflare Worker com Static Assets, D1 e R2. Landing, painel e API compartilham o deploy. D1 guarda dados relacionais; R2 fica reservado a anexos.
 
 Queues só entram quando houver trabalho assíncrono real. Durable Objects só entram para coordenação forte/WebSockets. Workers AI, AI Gateway e Vectorize só entram quando houver inferência/RAG real.
 
@@ -64,11 +65,12 @@ Queues só entram quando houver trabalho assíncrono real. Durable Objects só e
 - `DB` → D1 `negocia-ja-bd`.
 - `FILES` → R2 `negocia-ja-files`.
 - `ASSETS` → `public/`.
+- `assets.run_worker_first=true` para que autenticação/roteamento do Worker ocorram antes dos arquivos estáticos.
 - `APP_ENVIRONMENT=production`.
 - `DEFAULT_TENANT_ID=tenant_demo`.
 - `ACCESS_TEAM_DOMAIN` e `ACCESS_AUD` são identificadores públicos, não secrets.
 
-Não há secrets obrigatórios no código conhecido atual. Nunca versionar tokens OAuth/API.
+Nunca versionar tokens OAuth/API.
 
 ## Banco remoto
 
@@ -82,51 +84,51 @@ Não reaplicar nem recriar o banco. Antes de migration futura, listar pendentes 
 
 ## Segurança reconstruída na branch de recuperação
 
-A branch `agent/recovery-foundation` agora reconstrói os controles descritos pelo handoff original:
+- JWT do Cloudflare Access validado no Worker com JWKS, issuer e AUD usando `jose`.
+- Worker executa antes dos Static Assets, evitando bypass da autenticação por arquivo estático.
+- API em raiz/`www` responde 404.
+- `/app` em raiz/`www` redireciona para `app.negociaja.com.br`.
+- Tenant não é aceito por `x-tenant-id`; por enquanto vem de `DEFAULT_TENANT_ID` no servidor.
+- Mutations exigem origem válida, JSON e corpo máximo de 64 KiB em produção.
+- Entradas, enums, quantidades, estoque, status e valores são validados.
+- Status de pedido precisa existir no workflow do tenant, exceto `cancelled`.
+- Painel renderiza dados dinâmicos com DOM APIs/`textContent`, não `innerHTML` com dados do D1.
+- CSP, HSTS, `noindex` privado, `nosniff`, frame denial, referrer policy e permissions policy são aplicados pelo Worker.
 
-- `app.negociaja.com.br` exige JWT do Cloudflare Access também dentro do Worker.
-- JWT validado criptograficamente com JWKS, issuer e AUD usando `jose`.
-- API em `negociaja.com.br` e `www.negociaja.com.br` responde 404.
-- `/app` na raiz e em `www` redireciona ao hostname protegido.
-- Tenant não é mais aceito pelo header `x-tenant-id`; enquanto não existir associação usuário↔tenant, usa `DEFAULT_TENANT_ID` no servidor.
-- Mutations exigem origem `https://app.negociaja.com.br`, `application/json` e corpo máximo de 64 KiB em produção.
-- Nomes, enums, quantidades, estoque, status e valores possuem validação de servidor.
-- `public/app.js` não envia tenant pelo navegador e renderiza dados dinâmicos com `textContent`/DOM APIs, sem `innerHTML` com dados do D1.
-- CSP, HSTS, `noindex` no conteúdo privado, `nosniff`, frame denial, referrer policy e permissions policy são aplicados pelo Worker.
-- O status de pedido precisa pertencer ao workflow do tenant, exceto `cancelled`.
+Ainda falta homologação comportamental antes de considerar esta reconstrução equivalente à produção.
 
-Essa reconstrução ainda não equivale à produção até passar homologação. Não fazer merge nem deploy apenas com base nesta seção.
+## Build e CI
 
-## Validação automatizada de recuperação
+`.github/workflows/ci.yml` executa `npm install` e `npm run check` em PRs, sem publicar o Worker. `main` também será validado em push quando o workflow for incorporado.
 
-Foi criado `.github/workflows/ci.yml` na branch de recuperação. O workflow executa `npm install` e `npm run check`, que cobre TypeScript, sintaxe do JavaScript do painel e `wrangler deploy --dry-run`. Ele não publica o Worker.
+Causas reais encontradas na antiga falha de build:
 
-Em 19 de agosto de 2026, o primeiro CI revelou que `@cloudflare/workers-types@^4.20260818.0` não existia no npm. A dependência foi corrigida para uma versão publicada (`^5.20260813.1`). Após a correção, instalação e `npm run check` concluíram com sucesso no GitHub Actions.
+- `@cloudflare/workers-types@^4.20260818.0` não existia no npm.
+- Workers Types v5 com Wrangler 4.31.0 gerava conflito de peer dependency quando fixados exatamente.
 
-## Comandos seguros
+A branch foi alinhada, sem `--force`/`--legacy-peer-deps`, às versões que passaram instalação e `npm run check` no GitHub Actions:
 
-```powershell
-npm.cmd install
-npm.cmd run types
-npm.cmd run db:local
-npm.cmd run check
-npm.cmd run dev
-npm.cmd run db:remote:list
-npm.cmd run deploy
-```
+- `jose` `6.2.8`
+- `@cloudflare/workers-types` `5.20260813.1`
+- `typescript` `5.9.2`
+- `wrangler` `4.123.0`
 
-`npm run check` executa TypeScript, valida o JavaScript do painel e faz dry-run do deploy.
+`npm run check` cobre TypeScript, `node --check public/app.js` e `wrangler deploy --dry-run`.
+
+## Identidade visual
+
+A frase aprovada `O sistema se adapta ao seu negócio.` já foi restaurada na landing da branch de recuperação.
+
+Os binários oficiais de marca (`public/brand`, ícones, manifest e variantes de logo) não estão no GitHub histórico recuperado. Não regenerar nem substituir por aproximações. Recuperar os arquivos oficiais antes do merge final de branding.
 
 ## Ponto de continuidade
 
-1. Comparar a branch recuperada com o comportamento real da produção sem alterar produção.
-2. Recuperar/aplicar a identidade visual pública ainda ausente no GitHub, se necessário.
-3. Preparar ambiente de homologação/preview separado para smoke tests reais.
-4. Somente depois decidir sobre merge para `main`.
-5. Corrigir o pipeline de Workers Builds quando o GitHub representar a aplicação correta.
-6. Concluir branding da tela de login do Cloudflare Access.
-7. Criar homologação separada antes de dados reais e múltiplos tenants.
-8. Implementar associação usuário↔tenant antes de onboarding multiempresa.
+1. Recuperar os binários oficiais de identidade visual que ainda não estão no GitHub.
+2. Fazer homologação/preview separado da branch recuperada, sem substituir produção.
+3. Comparar landing, painel, API, Access e D1 com o comportamento da produção.
+4. Implementar associação usuário↔tenant antes de múltiplas empresas reais.
+5. Somente depois decidir sobre merge para `main` e reativar o fluxo automático de produção.
+6. Concluir branding da tela de login do Cloudflare Access sem alterar a política Allow.
 
 ## Branding desejado do Access
 
@@ -136,11 +138,7 @@ npm.cmd run deploy
 - Cabeçalho: `Bem-vindo ao NegocIAJá!`
 - Rodapé: `Atendimento, vendas e operação em um único fluxo.`
 
-Não alterar a política Allow existente durante o branding.
-
 ## Rollback
-
-Versão anterior estável registrada:
 
 ```powershell
 npx wrangler rollback 8a0f607e-712f-4347-b48a-81a86142443a
