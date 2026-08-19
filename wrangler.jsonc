@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "negociaja",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-19",
+  "observability": {
+    "enabled": true
+  }
+  // Bindings são conectados no painel Cloudflare:
+  // D1 binding: DB -> negocia-ja-bd
+  // R2 binding: FILES -> negocia-ja-files
+}
