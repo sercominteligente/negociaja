@@ -95,11 +95,13 @@ A branch `agent/recovery-foundation` agora reconstrói os controles descritos pe
 - CSP, HSTS, `noindex` no conteúdo privado, `nosniff`, frame denial, referrer policy e permissions policy são aplicados pelo Worker.
 - O status de pedido precisa pertencer ao workflow do tenant, exceto `cancelled`.
 
-Essa reconstrução ainda não equivale à produção até passar CI/dry-run e homologação. Não fazer merge nem deploy apenas com base nesta seção.
+Essa reconstrução ainda não equivale à produção até passar homologação. Não fazer merge nem deploy apenas com base nesta seção.
 
 ## Validação automatizada de recuperação
 
 Foi criado `.github/workflows/ci.yml` na branch de recuperação. O workflow executa `npm install` e `npm run check`, que cobre TypeScript, sintaxe do JavaScript do painel e `wrangler deploy --dry-run`. Ele não publica o Worker.
+
+Em 19 de agosto de 2026, o primeiro CI revelou que `@cloudflare/workers-types@^4.20260818.0` não existia no npm. A dependência foi corrigida para uma versão publicada (`^5.20260813.1`). Após a correção, instalação e `npm run check` concluíram com sucesso no GitHub Actions.
 
 ## Comandos seguros
 
@@ -117,10 +119,10 @@ npm.cmd run deploy
 
 ## Ponto de continuidade
 
-1. Aguardar e corrigir qualquer falha do CI da branch de recuperação.
-2. Comparar a branch recuperada com o comportamento real da produção sem alterar produção.
-3. Recuperar/aplicar a identidade visual pública ainda ausente no GitHub, se necessário.
-4. Somente depois validar preview/homologação e decidir sobre merge para `main`.
+1. Comparar a branch recuperada com o comportamento real da produção sem alterar produção.
+2. Recuperar/aplicar a identidade visual pública ainda ausente no GitHub, se necessário.
+3. Preparar ambiente de homologação/preview separado para smoke tests reais.
+4. Somente depois decidir sobre merge para `main`.
 5. Corrigir o pipeline de Workers Builds quando o GitHub representar a aplicação correta.
 6. Concluir branding da tela de login do Cloudflare Access.
 7. Criar homologação separada antes de dados reais e múltiplos tenants.
