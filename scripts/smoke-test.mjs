@@ -20,6 +20,13 @@ console.log(`Smoke testing ${base}`);
   assert(payload.ok === true, 'health payload is not ok');
 }
 
+{
+  const { response, payload } = await request('/api/session');
+  assert(response.ok, `session returned ${response.status}`);
+  assert(payload.data?.tenant_id === 'tenant_demo', 'session returned wrong tenant');
+  assert(payload.data?.environment === 'development', 'session returned wrong environment');
+}
+
 let catalog;
 {
   const { response, payload } = await request('/api/catalog', {
@@ -60,14 +67,16 @@ let createdItemId;
   assert(typeof createdItemId === 'string' && createdItemId.startsWith('item_'), 'catalog create did not return an id');
 }
 
+const customerName = '<img src=x onerror=alert(1)> Smoke Customer';
+const customerPhone = '85999990000';
 let orderId;
 {
   const { response, payload } = await request('/api/orders', {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({
-      customer_name: '<img src=x onerror=alert(1)> Smoke Customer',
-      customer_phone: '85999990000',
+      customer_name: customerName,
+      customer_phone: customerPhone,
       source: 'ci-smoke',
       items: [{ catalog_item_id: createdItemId, qty: 2 }]
     })
@@ -76,6 +85,17 @@ let orderId;
   orderId = payload.data?.id;
   assert(typeof orderId === 'string' && orderId.startsWith('ord_'), 'order create did not return an id');
   assert(payload.data?.total_cents === 2468, `unexpected order total: ${payload.data?.total_cents}`);
+}
+
+{
+  const { response, payload } = await request('/api/customers');
+  assert(response.ok, `customers returned ${response.status}`);
+  assert(Array.isArray(payload.data), 'customers is not an array');
+  const customer = payload.data.find((item) => item.phone === customerPhone);
+  assert(customer, 'created customer not found');
+  assert(customer.name === customerName, 'stored customer text changed unexpectedly');
+  assert(Number(customer.order_count) >= 1, 'customer order count was not aggregated');
+  assert(Number(customer.total_spent_cents) >= 2468, 'customer spend was not aggregated');
 }
 
 {
@@ -103,7 +123,7 @@ let orderId;
   const order = payload.data?.find((item) => item.id === orderId);
   assert(order, 'created order not found');
   assert(order.status === 'confirmed', 'created order has wrong status');
-  assert(order.customer_name === '<img src=x onerror=alert(1)> Smoke Customer', 'stored text changed unexpectedly');
+  assert(order.customer_name === customerName, 'stored text changed unexpectedly');
 }
 
 {
