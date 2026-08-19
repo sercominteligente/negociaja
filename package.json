@@ -13,6 +13,9 @@
     "db:remote:list": "wrangler d1 migrations list negocia-ja-bd --remote",
     "check": "npm run typecheck && node --check public/app.js && wrangler deploy --dry-run"
   },
+  "dependencies": {
+    "jose": "^6.2.8"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260818.0",
     "typescript": "^5.9.2",
