@@ -8,6 +8,8 @@ interface Env {
   DEFAULT_TENANT_ID: string;
   ACCESS_TEAM_DOMAIN: string;
   ACCESS_AUD: string;
+  HML_USERNAME?: string;
+  HML_PASSWORD?: string;
 }
 
 type Dict = Record<string, unknown>;
@@ -37,6 +39,7 @@ const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 const makeId = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
 
 const isProduction = (env: Env) => env.APP_ENVIRONMENT === 'production';
+const isHml = (env: Env) => env.APP_ENVIRONMENT === 'hml';
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -75,6 +78,38 @@ function notFound(privateContent = false): Response {
 
 function redirectToApp(): Response {
   return secureResponse(Response.redirect(`https://${APP_HOST}/`, 302), false);
+}
+
+function hmlAuthorized(request: Request, env: Env): boolean {
+  const expectedPassword = env.HML_PASSWORD;
+  if (!expectedPassword) return false;
+
+  const authorization = request.headers.get('authorization');
+  if (!authorization?.startsWith('Basic ')) return false;
+
+  try {
+    const decoded = atob(authorization.slice(6));
+    const separator = decoded.indexOf(':');
+    if (separator < 0) return false;
+    const username = decoded.slice(0, separator);
+    const password = decoded.slice(separator + 1);
+    return username === (env.HML_USERNAME || 'homologacao') && password === expectedPassword;
+  } catch {
+    return false;
+  }
+}
+
+function hmlChallenge(): Response {
+  return secureResponse(
+    new Response('Autenticação necessária para a homologação.', {
+      status: 401,
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        'www-authenticate': 'Basic realm="NegocIAJá HML", charset="UTF-8"'
+      }
+    }),
+    true
+  );
 }
 
 function getJwks(teamDomain: string) {
@@ -126,10 +161,19 @@ async function authForRequest(request: Request, env: Env): Promise<AuthContext> 
 }
 
 function ensureAllowedOrigin(request: Request, env: Env): void {
-  if (!isProduction(env)) return;
-  const origin = request.headers.get('origin');
-  if (origin !== `https://${APP_HOST}`) {
-    throw new HttpError(403, 'Origem não autorizada.');
+  if (isProduction(env)) {
+    const origin = request.headers.get('origin');
+    if (origin !== `https://${APP_HOST}`) {
+      throw new HttpError(403, 'Origem não autorizada.');
+    }
+    return;
+  }
+
+  if (isHml(env)) {
+    const origin = request.headers.get('origin');
+    if (origin !== new URL(request.url).origin) {
+      throw new HttpError(403, 'Origem não autorizada.');
+    }
   }
 }
 
@@ -249,6 +293,17 @@ async function handleApi(request: Request, env: Env, url: URL, auth: AuthContext
     });
   }
 
+  if (method === 'GET' && url.pathname === '/api/session') {
+    return json({
+      data: {
+        tenant_id: tenantId,
+        email: auth.email || null,
+        subject: auth.subject || null,
+        environment: env.APP_ENVIRONMENT
+      }
+    });
+  }
+
   if (method === 'GET' && url.pathname === '/api/dashboard') {
     const [customers, catalog, openOrders, sales, conversations] = await Promise.all([
       env.DB.prepare('SELECT COUNT(*) total FROM customers WHERE tenant_id = ?').bind(tenantId).first<{ total: number }>(),
@@ -267,6 +322,22 @@ async function handleApi(request: Request, env: Env, url: URL, auth: AuthContext
         activeConversations: conversations?.total ?? 0
       }
     });
+  }
+
+  if (method === 'GET' && url.pathname === '/api/customers') {
+    const result = await env.DB.prepare(`
+      SELECT c.id, c.name, c.phone, c.email, c.created_at,
+        COUNT(o.id) order_count,
+        COALESCE(SUM(CASE WHEN o.status != 'cancelled' THEN o.total_cents ELSE 0 END), 0) total_spent_cents,
+        MAX(o.created_at) last_order_at
+      FROM customers c
+      LEFT JOIN orders o ON o.customer_id = c.id AND o.tenant_id = c.tenant_id
+      WHERE c.tenant_id = ?
+      GROUP BY c.id, c.name, c.phone, c.email, c.created_at
+      ORDER BY COALESCE(MAX(o.created_at), c.created_at) DESC
+      LIMIT 100
+    `).bind(tenantId).all();
+    return json({ data: result.results });
   }
 
   if (method === 'GET' && url.pathname === '/api/catalog') {
@@ -567,6 +638,14 @@ async function route(request: Request, env: Env): Promise<Response> {
     return secureResponse(await serveApp(request, env, url), true);
   }
 
+  if (isHml(env)) {
+    if (!hmlAuthorized(request, env)) return hmlChallenge();
+    const auth = localAuth(env);
+    const apiResponse = await handleApi(request, env, url, auth);
+    if (apiResponse) return secureResponse(apiResponse, true);
+    return secureResponse(await serveApp(request, env, url), true);
+  }
+
   const auth = localAuth(env);
   const apiResponse = await handleApi(request, env, url, auth);
   if (apiResponse) return secureResponse(apiResponse, true);
@@ -594,7 +673,7 @@ export default {
               status: 500,
               headers: { 'content-type': 'text/plain; charset=utf-8' }
             }),
-        url.hostname === APP_HOST || url.pathname.startsWith('/api/')
+        url.hostname === APP_HOST || isHml(env) || url.pathname.startsWith('/api/')
       );
     }
   }
