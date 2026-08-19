@@ -21,16 +21,43 @@ NegocIAJá é uma plataforma SaaS multissegmento para atendimento conversacional
 - Branch de recuperação: `agent/recovery-foundation`
 - Draft PR: `#1`
 
+## Recuperação do checkout perdido em 19/08/2026
+
+O usuário localizou no PC o arquivo `negociaja.rar`. O conteúdo foi inspecionado e confirma que ele é uma cópia praticamente completa do checkout local perdido que produziu a versão publicada manualmente.
+
+O arquivo recuperado contém, entre outros:
+
+- `src/index.ts` original;
+- `wrangler.jsonc` original de produção;
+- `package.json` e `package-lock.json`;
+- `worker-configuration.d.ts` gerado pelo Wrangler;
+- `docs/PROJECT_HANDOFF.md` e `docs/CLOUDFLARE.md` originais;
+- migrations `0001`, `0002` e `0003`;
+- `dist/` da build;
+- `public/brand.css`, `manifest.webmanifest` e `_headers`;
+- os três PNGs oficiais da marca;
+- favicon e ícones 16, 32, 180, 192 e 512 px.
+
+Os binários oficiais recuperados são:
+
+- `public/brand/logo-primary.png`;
+- `public/brand/logo-primary-with-slogan.png`;
+- `public/brand/logo-reverse-dark-bg.png`.
+
+Não substituir esses arquivos por aproximações geradas. O conteúdo do RAR deve ser tratado como referência histórica da versão publicada, enquanto a branch `agent/recovery-foundation` preserva também as melhorias posteriores de CI, smoke tests e painel funcional. Fazer fusão seletiva, não sobrescrever a branch inteira pelo snapshot antigo.
+
 ## Produção conhecida
 
 - Landing: `https://negociaja.com.br/`
 - Landing alternativa: `https://www.negociaja.com.br/`
 - Painel: `https://app.negociaja.com.br/`
 - Worker: `negociaja`
-- Versão ativa registrada no handoff local perdido: `1bfd75f2-f9c9-479c-8e91-de53767ea2db`
+- Versão ativa registrada no handoff recuperado: `1bfd75f2-f9c9-479c-8e91-de53767ea2db`
 - Versão anterior estável: `8a0f607e-712f-4347-b48a-81a86142443a`
+- Deployment anterior do template: `73c168b8-594b-4e59-b7d7-e2d19c38224e`
+- Versão do template: `a36459f4-1275-4d8c-9540-00d829c8692c`
 
-A produção foi publicada manualmente por Wrangler. O checkout local que produziu essa versão foi perdido antes do push. Portanto, não assumir que `main` representa exatamente a produção.
+A produção foi publicada manualmente por Wrangler e validada visualmente. O `main` histórico não representa exatamente essa versão.
 
 ## Inventário Cloudflare
 
@@ -59,7 +86,7 @@ Queues só entram quando houver trabalho assíncrono real. Durable Objects só e
 - `APP_ENVIRONMENT=production`.
 - `DEFAULT_TENANT_ID=tenant_demo`.
 - `ACCESS_TEAM_DOMAIN` e `ACCESS_AUD` são identificadores públicos, não secrets.
-- `compatibility_date=2026-08-18`, data suportada pelo workerd validado no CI atual.
+- A branch de recuperação usa `compatibility_date=2026-08-18`, data já comprovada no runtime CI. O snapshot original usava `2026-08-19` com Wrangler `4.124.0`; só avançar a data depois de CI e smoke test verdes.
 
 Nunca versionar tokens OAuth/API.
 
@@ -92,21 +119,7 @@ Não reaplicar nem recriar o banco. Antes de migration futura, listar pendentes 
 
 `.github/workflows/ci.yml` executa validação sem publicar o Worker.
 
-Causas reais encontradas na antiga falha de build/runtime:
-
-1. `@cloudflare/workers-types@^4.20260818.0` não existia no npm.
-2. Workers Types v5 com Wrangler 4.31.0 gerava conflito de peer dependency quando fixados exatamente.
-3. O `compatibility_date` 2026-08-19 era um dia além do suportado pelo workerd empacotado no Wrangler 4.123.0 usado no CI.
-
-Toolchain validada:
-
-- `jose` `6.2.8`
-- `@cloudflare/workers-types` `5.20260813.1`
-- `typescript` `5.9.2`
-- `wrangler` `4.123.0`
-- `compatibility_date` `2026-08-18`
-
-O CI atual conclui com sucesso:
+A branch atual conclui com sucesso:
 
 - instalação de dependências;
 - TypeScript;
@@ -122,19 +135,36 @@ Nenhuma dessas validações escreve no D1 remoto ou publica Worker.
 
 ## Identidade visual
 
-A frase aprovada `O sistema se adapta ao seu negócio.` já foi restaurada na landing da branch de recuperação.
+A identidade oficial foi recuperada do `negociaja.rar` e corresponde ao mini brand board aprovado.
 
-Os binários oficiais de marca (`public/brand`, ícones, manifest e variantes de logo) não estão no GitHub histórico recuperado. Não regenerar nem substituir por aproximações. Recuperar os arquivos oficiais antes do merge final de branding.
+Paleta oficial:
+
+- `#0B2B7C` navy;
+- `#169CFF` blue;
+- `#25D9FF` cyan;
+- `#FFC107` yellow;
+- `#FF9800` orange;
+- `#FFFFFF` white.
+
+Ativos oficiais recuperados:
+
+- logo principal horizontal;
+- logo principal com slogan;
+- versão reversa para fundo escuro;
+- favicon e ícones PWA.
+
+A frase aprovada da landing permanece: `O sistema se adapta ao seu negócio.`
 
 ## Ponto de continuidade
 
-1. Recuperar os binários oficiais de identidade visual ainda ausentes do GitHub.
-2. Preparar preview/homologação Cloudflare separado, sem substituir produção.
-3. Comparar landing, painel, API, Access e D1 com a produção.
-4. Implementar associação usuário↔tenant antes de múltiplas empresas reais.
-5. Evoluir o painel para os fluxos reais de clientes, conversas, pedidos, catálogo e automações.
-6. Somente depois decidir sobre merge em `main` e pipeline automático de produção.
-7. Concluir branding da tela de login do Cloudflare Access sem alterar a política Allow.
+1. Incorporar os ativos oficiais recuperados à branch/repositório sem degradar os binários.
+2. Comparar seletivamente `src/index.ts`, Wrangler, headers e HTML originais com a branch reconstruída, preservando as melhorias já validadas.
+3. Preparar preview/homologação Cloudflare separado, sem substituir produção nem usar dados reais do D1 de produção para mutations.
+4. Comparar landing, painel, API e Access com a produção.
+5. Implementar associação usuário↔tenant antes de múltiplas empresas reais.
+6. Evoluir clientes, conversas, pedidos, catálogo e automações.
+7. Somente depois decidir sobre merge em `main` e pipeline automático de produção.
+8. Concluir branding da tela de login do Cloudflare Access sem alterar a política Allow.
 
 ## Branding desejado do Access
 
