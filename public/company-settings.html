@@ -51,12 +51,25 @@
       <div class="tab" id="tab-branding">
         <span class="kicker">WHITE LABEL</span>
         <h1>Identidade visual</h1>
-        <p class="lead">Personalize a experiência do painel e os materiais comerciais da sua empresa.</p>
+        <p class="lead">Personalize painel, catálogo e documentos. Os arquivos ficam isolados no R2 da sua empresa.</p>
         <div class="form-grid">
           <label>Nome exibido<input id="company_display_name" maxlength="180"></label>
           <label>Slogan<input id="slogan" maxlength="240"></label>
-          <label>Logo (chave/URL R2)<input id="logo_key" maxlength="500" placeholder="brands/minha-empresa/logo.png"></label>
-          <label>Favicon (chave/URL R2)<input id="favicon_key" maxlength="500"></label>
+
+          <div class="upload-card wide">
+            <div><strong>Logotipo principal</strong><small>PNG, JPG/JPEG, WebP ou SVG • até 5 MB. Recomendado: PNG transparente, mínimo 500 px; horizontal ideal entre 1200×400 e 2000×700 px.</small></div>
+            <label class="upload-button">Enviar logotipo<input id="logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+            <span id="logo_status">Nenhum arquivo enviado nesta sessão.</span>
+            <input id="logo_key" type="hidden">
+          </div>
+
+          <div class="upload-card wide">
+            <div><strong>Ícone / favicon</strong><small>PNG, JPG/JPEG, WebP ou SVG • até 5 MB. Ideal: imagem quadrada 1024×1024 px.</small></div>
+            <label class="upload-button">Enviar ícone<input id="favicon_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+            <span id="favicon_status">Nenhum arquivo enviado nesta sessão.</span>
+            <input id="favicon_key" type="hidden">
+          </div>
+
           <label>Cor principal<input id="primary_color" type="color"></label>
           <label>Cor secundária<input id="secondary_color" type="color"></label>
           <label>Cor de destaque<input id="accent_color" type="color"></label>
@@ -77,9 +90,14 @@
           <label>Layout<select id="catalog_layout"><option value="grid">Grade</option><option value="list">Lista</option><option value="compact">Compacto</option></select></label>
           <label class="wide">Descrição<textarea id="catalog_description" rows="3"></textarea></label>
           <label>Título do banner<input id="hero_title" maxlength="240"></label>
-          <label>Imagem do banner (R2)<input id="hero_image_key" maxlength="500"></label>
-          <label class="wide">Subtítulo do banner<textarea id="hero_subtitle" rows="2"></textarea></label>
           <label>Estilo dos cards<select id="card_style"><option value="default">Padrão</option><option value="soft">Suave</option><option value="bordered">Contornado</option><option value="minimal">Minimalista</option></select></label>
+          <div class="upload-card wide">
+            <div><strong>Banner do catálogo</strong><small>PNG, JPG/JPEG, WebP ou SVG • até 5 MB. Prefira imagem horizontal de alta qualidade.</small></div>
+            <label class="upload-button">Enviar banner<input id="hero_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+            <span id="hero_status">Nenhum arquivo enviado nesta sessão.</span>
+            <input id="hero_image_key" type="hidden">
+          </div>
+          <label class="wide">Subtítulo do banner<textarea id="hero_subtitle" rows="2"></textarea></label>
           <label>Domínio personalizado<input id="custom_domain" maxlength="240" placeholder="catalogo.suaempresa.com.br"></label>
           <label class="check"><input id="show_prices" type="checkbox" checked> Exibir preços</label>
           <label class="check"><input id="show_stock" type="checkbox"> Exibir estoque</label>
@@ -92,10 +110,7 @@
         <h1>Numeração e modelos</h1>
         <p class="lead">Orçamentos, pedidos, recibos e faturas possuem numeração própria por empresa.</p>
         <div id="numberingGrid" class="numbering-grid"></div>
-        <div class="template-note">
-          <strong>Modelos avançados</strong>
-          <p>Logo, cabeçalho, dados fiscais, assinatura, condições de pagamento e rodapé são armazenados por tenant. O PDF usa um snapshot para preservar o documento exatamente como foi emitido.</p>
-        </div>
+        <div class="template-note"><strong>Modelos avançados</strong><p>Logo, cabeçalho, dados fiscais, assinatura, condições de pagamento e rodapé são armazenados por tenant. O PDF usa um snapshot para preservar o documento exatamente como foi emitido.</p></div>
       </div>
 
       <div class="tab" id="tab-portal">
@@ -105,7 +120,12 @@
           <label class="wide">Título de boas-vindas<input id="dashboard_welcome_title" maxlength="180"></label>
           <label class="wide">Texto de boas-vindas<textarea id="dashboard_welcome_text" rows="3"></textarea></label>
           <label>Nome do suporte IA<input id="support_label" maxlength="80"></label>
-          <label>Fundo do login (R2)<input id="login_background_key" maxlength="500"></label>
+          <div class="upload-card wide">
+            <div><strong>Fundo do login</strong><small>PNG, JPG/JPEG, WebP ou SVG • até 5 MB.</small></div>
+            <label class="upload-button">Enviar fundo<input id="login_background_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+            <span id="login_background_status">Nenhum arquivo enviado nesta sessão.</span>
+            <input id="login_background_key" type="hidden">
+          </div>
           <label class="wide">Mensagem do login<textarea id="login_message" rows="3"></textarea></label>
         </div>
       </div>
@@ -114,7 +134,7 @@
     <aside class="preview">
       <span class="preview-label">PREVIEW</span>
       <article class="brand-preview" id="brandPreview">
-        <div class="preview-logo" id="previewLogo">SUA MARCA</div>
+        <div class="preview-logo" id="previewLogo"><img id="previewLogoImage" alt="Logotipo da empresa" hidden><span id="previewLogoText">SUA MARCA</span></div>
         <h2 id="previewName">Sua empresa</h2>
         <p id="previewSlogan">Seu slogan aparece aqui.</p>
         <div class="preview-card"><strong>Pedido PED-00001</strong><span>Cliente Exemplo</span><b>R$ 129,90</b></div>
