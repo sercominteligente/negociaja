@@ -51,7 +51,7 @@ jobs:
           HML_OUTBOX_SERVICE_TOKEN: ci-outbox-token-strong-value-2026
         run: |
           set -euo pipefail
-          npx wrangler dev --env hml --port 8788 --var HML_PASSWORD:ci-hml-secret --var OUTBOX_SERVICE_TOKEN:ci-outbox-token-strong-value-2026 > /tmp/negociaja-hml-wrangler.log 2>&1 &
+          npx wrangler dev --env hml --port 8788 --var HML_PASSWORD:ci-hml-secret --var OUTBOX_SERVICE_TOKEN:ci-outbox-token-strong-value-2026 --var HML_RATE_LIMIT_PER_MINUTE:20 > /tmp/negociaja-hml-wrangler.log 2>&1 &
           WRANGLER_PID=$!
           trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
           READY=0
@@ -69,5 +69,7 @@ jobs:
           node scripts/approvals-onboarding-smoke-test.mjs
           node scripts/action-execution-smoke-test.mjs
           node scripts/outbox-dispatch-smoke-test.mjs
+          npx wrangler d1 execute DB --local --env hml --command "INSERT OR IGNORE INTO tenants (id,slug,name,segment,status) VALUES ('tenant_iso','tenant-iso','Tenant Isolado','test','active'); INSERT OR IGNORE INTO customers (id,tenant_id,name,phone) VALUES ('customer_iso','tenant_iso','SEGREDO-TENANT-ISO','5500000000000'); INSERT OR IGNORE INTO catalog_items (id,tenant_id,name,price_cents) VALUES ('item_iso','tenant_iso','SEGREDO-TENANT-ISO',999); INSERT OR IGNORE INTO orders (id,tenant_id,customer_id,public_code,total_cents) VALUES ('order_iso','tenant_iso','customer_iso','ISO-0001',999); INSERT OR IGNORE INTO generated_documents (id,tenant_id,document_type,document_number,entity_type,entity_id,status,snapshot_json) VALUES ('doc_iso','tenant_iso','order','ISO-PED-0001','order','order_iso','generated','{}');"
+          node scripts/security-privacy-isolation-smoke-test.mjs
           npx wrangler d1 execute DB --local --env hml --command "UPDATE tenant_subscriptions SET status='active', current_period_end=datetime('now','-10 day'), trial_ends_at=datetime('now','-10 day'), grace_until=datetime('now','-5 day') WHERE tenant_id='tenant_demo';"
           node scripts/license-suspension-smoke.mjs
