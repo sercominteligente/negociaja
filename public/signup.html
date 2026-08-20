@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Adesão • NegocIAJá!</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(145deg,#f7faff,#edf5ff);color:#071a43;min-height:100vh}.shell{max-width:1120px;margin:auto;padding:34px 18px;display:grid;grid-template-columns:1fr 520px;gap:46px;align-items:center;min-height:100vh}.brand{font-size:34px;font-weight:950;color:#0b2b7c}.brand span{color:#169cff}.brand b{color:#ff9800}.copy h1{font-size:52px;line-height:1.02;margin:26px 0 18px;letter-spacing:-2px}.copy p{font-size:18px;line-height:1.65;color:#5f6d84;max-width:560px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}.chips span{padding:8px 11px;border-radius:99px;background:#fff;border:1px solid #dfe8f6;font-size:12px;font-weight:800}.card{background:#fff;border:1px solid #dfe8f6;border-radius:24px;padding:28px;box-shadow:0 22px 65px rgba(11,43,124,.12)}.card h2{margin:0 0 5px;font-size:26px}.card>p{margin:0 0 22px;color:#69778f}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.wide{grid-column:1/-1}label{display:grid;gap:6px;font-size:12px;font-weight:850}input,select{width:100%;padding:12px;border:1px solid #cbd8ec;border-radius:11px;font:inherit;color:#071a43;background:#fbfdff}input:focus,select:focus{outline:0;border-color:#169cff;box-shadow:0 0 0 3px rgba(22,156,255,.12)}button{width:100%;margin-top:18px;padding:13px;border:0;border-radius:12px;background:linear-gradient(135deg,#0b2b7c,#169cff);color:#fff;font-weight:900;font-size:15px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.notice{display:none;margin-top:16px;padding:14px;border-radius:12px;background:#eef8ff;color:#0b2b7c;line-height:1.5}.notice.show{display:block}.notice.error{background:#fff0f0;color:#982020}.dev-link{display:block;margin-top:8px;word-break:break-all;color:#0d61df;font-weight:700}@media(max-width:900px){.shell{grid-template-columns:1fr;gap:24px;min-height:auto;padding-top:26px}.copy h1{font-size:40px}.card{padding:22px}}@media(max-width:560px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.copy h1{font-size:34px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="copy">
+      <div class="brand">Negoc<span>IA</span><b>Já!</b></div>
+      <h1>Seu atendimento começa aqui.</h1>
+      <p>Cadastre sua empresa, confirme o e-mail e libere o ambiente de uso. Depois você configura catálogo, equipe, canais e o agente inteligente do seu negócio.</p>
+      <div class="chips"><span>✓ Multiempresa</span><span>✓ WhatsApp + IA</span><span>✓ Catálogo e pedidos</span><span>✓ Suporte inteligente</span></div>
+    </section>
+    <section class="card">
+      <h2>Adesão ao NegocIAJá!</h2>
+      <p>Homologação segura antes da ativação comercial.</p>
+      <form id="signupForm">
+        <div class="grid">
+          <label class="wide">Nome da empresa<input id="companyName" maxlength="180" required></label>
+          <label>Seu nome<input id="name" maxlength="160" required></label>
+          <label>E-mail<input id="email" type="email" maxlength="254" required></label>
+          <label class="wide">Segmento<select id="segment"><option value="loja">Loja / Varejo</option><option value="delivery">Restaurante / Delivery</option><option value="comunicacao-visual">Comunicação Visual</option><option value="servicos">Prestador de Serviços</option><option value="custom">Personalizado</option></select></label>
+        </div>
+        <button id="submitBtn" type="submit">Criar empresa e confirmar e-mail</button>
+      </form>
+      <div id="notice" class="notice" role="status"></div>
+    </section>
+  </main>
+  <script src="/signup.js"></script>
+</body>
+</html>
