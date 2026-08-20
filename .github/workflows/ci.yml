@@ -78,6 +78,7 @@ jobs:
 
           node scripts/hml-smoke-test.mjs
           node scripts/documents-smoke-test.mjs
+          node scripts/core12-smoke-test.mjs
 
           npx wrangler d1 execute DB --local --env hml --command "UPDATE tenant_subscriptions SET status='active', current_period_end=datetime('now','-10 day'), trial_ends_at=datetime('now','-10 day'), grace_until=datetime('now','-5 day') WHERE tenant_id='tenant_demo';"
           node scripts/license-suspension-smoke.mjs
