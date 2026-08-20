@@ -15,11 +15,12 @@ const forbidText = (source, text, label) => {
 const wranglerText = read('wrangler.jsonc');
 const worker = read('src/index.ts');
 const platform = read('src/platform.ts');
+const hmlWorker = read('src/hml.ts');
 const panel = read('public/app.js');
 const landing = read('public/index.html');
 
 const wrangler = JSON.parse(wranglerText);
-if (wrangler?.main !== 'src/platform.ts') fail('SaaS platform gateway must remain the Worker entry point');
+if (wrangler?.main !== 'src/platform.ts') fail('Production SaaS platform gateway must remain the root Worker entry point');
 if (wrangler?.assets?.run_worker_first !== true) fail('wrangler assets.run_worker_first must remain true');
 if (wrangler?.d1_databases?.[0]?.binding !== 'DB') fail('D1 DB binding changed unexpectedly');
 if (wrangler?.r2_buckets?.[0]?.binding !== 'FILES') fail('R2 FILES binding changed unexpectedly');
@@ -28,6 +29,7 @@ if (wrangler?.assets?.binding !== 'ASSETS') fail('ASSETS binding changed unexpec
 const hml = wrangler?.env?.hml;
 if (!hml) fail('HML environment is missing');
 if (hml?.name !== 'negociaja-hml') fail('HML Worker name changed unexpectedly');
+if (hml?.main !== 'src/hml.ts') fail('HML must use the isolated experience gateway');
 if (hml?.workers_dev !== true) fail('HML must use workers.dev until a protected custom domain is explicitly configured');
 if (hml?.vars?.APP_ENVIRONMENT !== 'hml') fail('HML APP_ENVIRONMENT must be hml');
 if (hml?.vars?.HML_USERNAME !== 'homologacao') fail('HML username changed unexpectedly');
@@ -54,8 +56,17 @@ requireText(platform, 'cf-access-jwt-assertion', 'Platform gateway');
 requireText(platform, 'jwtVerify', 'Platform gateway');
 requireText(platform, "origin !== `https://${APP_HOST}`", 'Platform gateway');
 
+requireText(hmlWorker, 'MAX_ASSET_BYTES', 'HML gateway');
+requireText(hmlWorker, '5 * 1024 * 1024', 'HML gateway');
+requireText(hmlWorker, 'image/svg+xml', 'HML gateway');
+requireText(hmlWorker, 'validateSvg', 'HML gateway');
+requireText(hmlWorker, 'tenants/${tenantId}/branding/', 'HML gateway');
+requireText(hmlWorker, '/api/support/chat', 'HML gateway');
+requireText(hmlWorker, '/api/billing/summary', 'HML gateway');
+
 forbidText(worker, 'x-tenant-id', 'Core Worker');
 forbidText(platform, 'x-tenant-id', 'Platform gateway');
+forbidText(hmlWorker, 'x-tenant-id', 'HML gateway');
 forbidText(panel, 'x-tenant-id', 'Panel');
 forbidText(panel, '.innerHTML', 'Panel');
 forbidText(panel, 'insertAdjacentHTML', 'Panel');
