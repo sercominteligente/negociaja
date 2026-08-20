@@ -10,13 +10,14 @@
     "types": "wrangler types",
     "typecheck": "tsc --noEmit",
     "security:check": "node scripts/security-check.mjs",
+    "js:check": "node --check public/app.js && node --check public/company-settings.js && node --check public/support.js",
     "db:local": "wrangler d1 migrations apply negocia-ja-bd --local",
     "db:remote": "wrangler d1 migrations apply negocia-ja-bd --remote",
     "db:remote:list": "wrangler d1 migrations list negocia-ja-bd --remote",
     "db:hml:list": "wrangler d1 migrations list DB --remote --env hml",
     "db:hml:apply": "wrangler d1 migrations apply DB --remote --env hml",
-    "check": "npm run typecheck && node --check public/app.js && npm run security:check && wrangler deploy --dry-run",
-    "check:hml": "npm run typecheck && node --check public/app.js && npm run security:check && wrangler deploy --env hml --dry-run"
+    "check": "npm run typecheck && npm run js:check && npm run security:check && wrangler deploy --dry-run",
+    "check:hml": "npm run typecheck && npm run js:check && npm run security:check && wrangler deploy --env hml --dry-run"
   },
   "dependencies": {
     "jose": "6.2.8"
