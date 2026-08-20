@@ -5,8 +5,7 @@ interface Env{DB:D1Database;FILES:R2Bucket;ASSETS:Fetcher;APP_ENVIRONMENT:string
 type Session={tenant_id?:string;email?:string;role?:string;global_role?:string};
 type Snapshot={type?:string;number?:string;order?:Record<string,any>;items?:Array<Record<string,any>>;business?:Record<string,any>;branding?:Record<string,any>;generated_at?:string};
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const safe=(v:unknown)=>String(v??'').replace(/[–—]/g,'-').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/[^	
- -ÿ]/g,'?');
+const safe=(v:unknown)=>String(v??'').replace(/[–—]/g,'-').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").split('').map(ch=>{const c=ch.charCodeAt(0);return c>=32&&c<=255?ch:(ch==='\n'||ch==='\r'||ch==='\t'?' ': '?')}).join('');
 const money=(c:unknown)=>{const n=Math.round(Number(c)||0);const whole=Math.floor(Math.abs(n)/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');const cents=String(Math.abs(n)%100).padStart(2,'0');return `${n<0?'-':''}R$ ${whole},${cents}`};
 const hexColor=(v:unknown)=>{const m=String(v||'').match(/^#([0-9a-f]{6})$/i);if(!m)return rgb(0.04,0.17,0.49);const x=parseInt(m[1],16);return rgb(((x>>16)&255)/255,((x>>8)&255)/255,(x&255)/255)};
 async function sessionFor(request:Request,env:Env){const r=await execution.fetch(new Request(new URL('/api/session',request.url).toString(),{method:'GET',headers:request.headers}),env);if(!r.ok)return{response:r};const p=await r.clone().json().catch(()=>({})) as {data?:Session};return{session:p.data||{}}}
