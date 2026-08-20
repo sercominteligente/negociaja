@@ -1,2 +1,2 @@
-import security from './hml-security';
-export default security;
+import health from './hml-health';
+export default health;
