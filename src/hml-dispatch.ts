@@ -8,19 +8,9 @@ const stableMutation=(path:string)=>/^\/api\/catalog\/[^/]+\/image$/.test(path)|
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 function validOrigin(request:Request){const origin=request.headers.get('origin');if(!origin)return false;try{return new URL(origin).origin===new URL(request.url).origin}catch{return false}}
 
-const BRAND_CSS=`
-<style id="negociaja-official-brand">
-.brand-word,.admin-brand,.admin-mobile-brand,.sa-brand{font-size:0!important;color:transparent!important;background-image:url('/brand/logo-primary.png')!important;background-repeat:no-repeat!important;background-position:left center!important;background-size:contain!important;text-decoration:none!important;overflow:hidden!important}
-.brand-word{display:block!important;width:190px!important;height:62px!important;flex:0 0 190px!important}
-.admin-brand{display:block!important;width:172px!important;height:62px!important;margin:4px 10px 18px!important}
-.admin-mobile-brand{display:block!important;width:132px!important;height:42px!important;flex:0 0 132px!important}
-.sa-brand{display:block!important;width:176px!important;height:68px!important;margin:4px 10px 18px!important}
-.sa-brand small{display:none!important}
-.landing .hero-copy p::before{content:"";display:block;width:min(520px,100%);aspect-ratio:3/1;background:url('/brand/logo-primary.png') left center/contain no-repeat;margin:2px 0 22px}
-@media(max-width:760px){.brand-word{width:148px!important;height:48px!important;flex-basis:148px!important}.landing .hero-copy p::before{width:min(440px,100%);margin:0 0 16px}.admin-brand{width:168px!important;height:60px!important}.sa-brand{width:168px!important;height:64px!important}}
-</style>`;
+const HEAD_META='<link rel="icon" type="image/png" href="/brand/favicon-emblem.png"><link rel="apple-touch-icon" href="/brand/app-icon-192.png"><link rel="manifest" href="/manifest.webmanifest">';
 
-async function decorateHtml(response:Response){const type=response.headers.get('content-type')||'';if(!response.ok||!type.includes('text/html'))return response;const html=await response.text();const decorated=html.includes('negociaja-official-brand')?html:html.replace('</head>',`${BRAND_CSS}</head>`);const headers=new Headers(response.headers);headers.delete('content-length');headers.set('cache-control','no-store');return new Response(decorated,{status:response.status,statusText:response.statusText,headers})}
+async function decorateHtml(response:Response){const type=response.headers.get('content-type')||'';if(!response.ok||!type.includes('text/html'))return response;const html=await response.text();const decorated=html.includes('/manifest.webmanifest')?html:html.replace('</head>',`${HEAD_META}</head>`);const headers=new Headers(response.headers);headers.delete('content-length');headers.set('cache-control','no-store');return new Response(decorated,{status:response.status,statusText:response.statusText,headers})}
 
 async function serveCanonicalLogo(request:Request,env:Env){const target=new URL(request.url);target.pathname='/brand/logo-primary.png';const forwarded=new Request(target.toString(),request);const response=await stable.fetch(forwarded,env);if(!response.ok)return response;const headers=new Headers(response.headers);headers.set('content-type','image/png');headers.set('cache-control','public, max-age=3600');headers.delete('content-length');return new Response(response.body,{status:response.status,statusText:response.statusText,headers})}
 
