@@ -1,2 +1,2 @@
-import stable from './hml-stable';
-export default stable;
+import entry from './hml-entry';
+export default entry;
