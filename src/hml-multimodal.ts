@@ -28,11 +28,11 @@ async function sessionFor(request:Request,env:Env):Promise<{session?:Session;res
 
 async function readBody(request:Request):Promise<Dict>{
   const origin=request.headers.get('origin');
-  if(origin&&origin!==new URL(request.url).origin)return Promise.reject(new Response(JSON.stringify({error:'Origem não autorizada.'}),{status:403,headers:{'content-type':'application/json'}}));
-  if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))return Promise.reject(new Response(JSON.stringify({error:'Envie application/json.'}),{status:415,headers:{'content-type':'application/json'}}));
+  if(origin&&origin!==new URL(request.url).origin)throw new Response(JSON.stringify({error:'Origem não autorizada.'}),{status:403,headers:{'content-type':'application/json'}});
+  if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))throw new Response(JSON.stringify({error:'Envie application/json.'}),{status:415,headers:{'content-type':'application/json'}});
   const text=await request.text();
-  if(text.length>262144)return Promise.reject(new Response(JSON.stringify({error:'Payload muito grande.'}),{status:413,headers:{'content-type':'application/json'}}));
-  try{const v=JSON.parse(text||'{}');if(!v||typeof v!=='object'||Array.isArray(v))throw new Error();return v as Dict}catch{return Promise.reject(new Response(JSON.stringify({error:'JSON inválido.'}),{status:400,headers:{'content-type':'application/json'}}));}
+  if(text.length>262144)throw new Response(JSON.stringify({error:'Payload muito grande.'}),{status:413,headers:{'content-type':'application/json'}});
+  try{const v=JSON.parse(text||'{}');if(!v||typeof v!=='object'||Array.isArray(v))throw new Error();return v as Dict}catch{throw new Response(JSON.stringify({error:'JSON inválido.'}),{status:400,headers:{'content-type':'application/json'}});}
 }
 
 async function ensureCustomer(env:Env,tenantId:string,name:string,phone:string){
