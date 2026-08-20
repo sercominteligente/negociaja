@@ -2,108 +2,269 @@
   "name": "NegocIAJá HML - Evolution Multimodal",
   "nodes": [
     {
-      "parameters": { "httpMethod": "POST", "path": "negociaja-hml-evolution", "responseMode": "lastNode", "options": {} },
-      "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [-1160, 0], "id": "7a55c385-a118-4bc2-8ef7-e40b07113501", "name": "Evolution Webhook", "webhookId": "fe8b454b-b1bd-4cad-bbb5-4c90b43150bb"
-    },
-    {
       "parameters": {
-        "jsCode": "const b=$json.body||$json; const d=b.data||b; const m=d.message||{}; const key=d.key||{}; const jid=key.remoteJid||d.remoteJid||b.remoteJid||''; const phone=String(jid).split('@')[0]; let kind='text', text=''; if(m.audioMessage||d.messageType==='audioMessage') kind='audio'; else if(m.imageMessage||d.messageType==='imageMessage') kind='image'; else if(m.documentMessage||d.messageType==='documentMessage') kind='document'; text=m.conversation||m.extendedTextMessage?.text||m.imageMessage?.caption||d.text||b.text||''; const base64=d.base64||m.base64||b.base64||d.message?.base64||''; const mime=m.audioMessage?.mimetype||m.imageMessage?.mimetype||m.documentMessage?.mimetype||d.mimetype||''; return [{json:{provider:'evolution',external_event_id:String(key.id||d.id||b.id||Date.now()),instance:String(b.instance||d.instance||'hml'),phone,customer_name:d.pushName||b.pushName||'Contato',channel_type:'whatsapp',channel_name:'WhatsApp HML',external_conversation_id:jid||phone,content_type:kind,body:text,base64,mime_type:mime,file_name:m.documentMessage?.fileName||''}}];"
-      },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-920, 0], "id": "355898ad-566c-4c91-973c-a20f7e7afbaa", "name": "Normalize Evolution"
-    },
-    {
-      "parameters": {
-        "rules": { "values": [
-          { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $json.content_type }}", "rightValue": "audio", "operator": { "type": "string", "operation": "equals" }], "combinator": "and" }, "renameOutput": true, "outputKey": "audio" },
-          { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $json.content_type }}", "rightValue": "image", "operator": { "type": "string", "operation": "equals" }], "combinator": "and" }, "renameOutput": true, "outputKey": "image" }
-        ] },
-        "options": { "fallbackOutput": "extra" }
-      },
-      "type": "n8n-nodes-base.switch", "typeVersion": 3.2, "position": [-680, 0], "id": "9db33a42-c3b8-4212-94a6-5b3136a52aee", "name": "Route Modality"
-    },
-    {
-      "parameters": { "jsCode": "const b=$json.base64||''; if(!b) throw new Error('Evolution não enviou base64 do áudio. Ative mídia/base64 na instância.'); const raw=b.includes(',')?b.split(',').pop():b; const mime=$json.mime_type||'audio/ogg'; return [{json:{...$json},binary:{audio:{data:raw,mimeType:mime,fileName:'audio.ogg'}}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-420, -220], "id": "22e138ae-e7dd-40a7-91f8-9f22f9042433", "name": "Audio Base64 to Binary"
-    },
-    {
-      "parameters": {
-        "method": "POST", "url": "https://api.openai.com/v1/audio/transcriptions", "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{$env.OPENAI_API_KEY}}" }] },
-        "sendBody": true, "contentType": "multipart-form-data",
-        "bodyParameters": { "parameters": [
-          { "parameterType": "formBinaryData", "name": "file", "inputDataFieldName": "audio" },
-          { "name": "model", "value": "gpt-4o-mini-transcribe" },
-          { "name": "language", "value": "pt" }
-        ] },
+        "httpMethod": "POST",
+        "path": "negociaja-hml-evolution",
+        "responseMode": "lastNode",
         "options": {}
       },
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-180, -220], "id": "f4b940e7-ea5f-49ab-a781-2f67211383a2", "name": "Transcribe Audio"
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-1200, 0],
+      "id": "7a55c385-a118-4bc2-8ef7-e40b07113501",
+      "name": "Evolution Webhook",
+      "webhookId": "fe8b454b-b1bd-4cad-bbb5-4c90b43150bb"
     },
     {
-      "parameters": { "jsCode": "const original=$('Normalize Evolution').item.json; return [{json:{...original,transcript:$json.text||'',body:$json.text||original.body||''}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [60, -220], "id": "e9507ca6-b4b6-4fc6-b07f-c5e671de2560", "name": "Audio Message"
+      "parameters": {
+        "jsCode": "const b=$json.body||$json; const d=b.data||b; const m=d.message||{}; const key=d.key||{}; const jid=key.remoteJid||d.remoteJid||b.remoteJid||''; const phone=String(jid).split('@')[0]; let kind='text'; if(m.audioMessage||d.messageType==='audioMessage') kind='audio'; else if(m.imageMessage||d.messageType==='imageMessage') kind='image'; else if(m.documentMessage||d.messageType==='documentMessage') kind='document'; const text=m.conversation||m.extendedTextMessage?.text||m.imageMessage?.caption||d.text||b.text||''; const base64=d.base64||m.base64||b.base64||d.message?.base64||''; const mime=m.audioMessage?.mimetype||m.imageMessage?.mimetype||m.documentMessage?.mimetype||d.mimetype||''; return [{json:{provider:'evolution',external_event_id:String(key.id||d.id||b.id||Date.now()),instance:String(b.instance||d.instance||'hml'),phone,customer_name:d.pushName||b.pushName||'Contato',channel_type:'whatsapp',channel_name:'WhatsApp HML',external_conversation_id:jid||phone,content_type:kind,body:text,base64,mime_type:mime,file_name:m.documentMessage?.fileName||''}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-980, 0],
+      "id": "355898ad-566c-4c91-973c-a20f7e7afbaa",
+      "name": "Normalize Evolution"
     },
     {
-      "parameters": { "jsCode": "const mime=$json.mime_type||'image/jpeg'; const raw=String($json.base64||'').includes(',')?String($json.base64).split(',').pop():String($json.base64||''); if(!raw) throw new Error('Evolution não enviou base64 da imagem.'); return [{json:{...$json,ai_content:[{type:'input_text',text:'Analise a imagem enviada pelo cliente e considere a legenda/contexto: '+($json.body||'')},{type:'input_image',image_url:`data:${mime};base64,${raw}`}]}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-180, 0], "id": "72d1c401-29ce-43cc-bbec-6ccf12aef670", "name": "Prepare Image"
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2},
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.content_type }}",
+                    "rightValue": "audio",
+                    "operator": {"type": "string", "operation": "equals"}
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2},
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.content_type }}",
+                    "rightValue": "image",
+                    "operator": {"type": "string", "operation": "equals"}
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            }
+          ]
+        },
+        "options": {"fallbackOutput": "extra"}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [-760, 0],
+      "id": "9db33a42-c3b8-4212-94a6-5b3136a52aee",
+      "name": "Route Modality"
     },
     {
-      "parameters": { "jsCode": "return [{json:{...$json,ai_content:[{type:'input_text',text:$json.body||'Cliente enviou uma mensagem sem texto.'}]}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-180, 220], "id": "16c90b41-4dda-4e5b-90df-2a414295d142", "name": "Prepare Text"
+      "parameters": {
+        "jsCode": "const b=$json.base64||''; if(!b) throw new Error('Evolution não enviou base64 do áudio. Ative mídia/base64 na instância.'); const raw=b.includes(',')?b.split(',').pop():b; const mime=$json.mime_type||'audio/ogg'; return [{json:{...$json},binary:{audio:{data:raw,mimeType:mime,fileName:'audio.ogg'}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-520, -220],
+      "id": "22e138ae-e7dd-40a7-91f8-9f22f9042433",
+      "name": "Audio Base64 to Binary"
     },
     {
-      "parameters": { "jsCode": "const j=$json; const content=j.ai_content||[{type:'input_text',text:j.body||j.transcript||''}]; return [{json:{...j,openai_body:{model:'gpt-5-mini',instructions:'Você é o agente comercial do NegocIAJá. Responda em português brasileiro, de forma objetiva, prestativa e orientada a venda. Não invente preço, estoque, pedido ou dado de cliente. Quando precisar desses dados, informe que consultará o NegocIAJá.',input:[{role:'user',content}]}}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [300, 0], "id": "028159da-8179-489f-8619-4a30007c354b", "name": "Build AI Request"
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "=Bearer {{$env.OPENAI_API_KEY}}"}]},
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {"parameterType": "formBinaryData", "name": "file", "inputDataFieldName": "audio"},
+            {"name": "model", "value": "gpt-4o-mini-transcribe"},
+            {"name": "language", "value": "pt"}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-300, -220],
+      "id": "f4b940e7-ea5f-49ab-a781-2f67211383a2",
+      "name": "Transcribe Audio"
     },
     {
-      "parameters": { "method": "POST", "url": "https://api.openai.com/v1/responses", "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{$env.OPENAI_API_KEY}}" }, { "name": "Content-Type", "value": "application/json" }] }, "sendBody": true, "contentType": "raw", "rawContentType": "application/json", "body": "={{ JSON.stringify($json.openai_body) }}", "options": {} },
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [540, 0], "id": "5e260e30-e05e-43a9-b06d-9e2bc0ce1121", "name": "OpenAI Responses"
+      "parameters": {
+        "jsCode": "const original=$('Normalize Evolution').item.json; return [{json:{...original,transcript:$json.text||'',body:$json.text||original.body||'',ai_content:[{type:'input_text',text:$json.text||original.body||'Áudio sem transcrição.'}]}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-60, -220],
+      "id": "e9507ca6-b4b6-4fc6-b07f-c5e671de2560",
+      "name": "Prepare Audio Context"
     },
     {
-      "parameters": { "jsCode": "const src=$('Build AI Request').item.json; const out=Array.isArray($json.output)?$json.output:[]; let answer=''; for(const item of out){for(const c of (item.content||[])){if(c.type==='output_text'&&c.text) answer+=c.text;}} answer=answer||$json.output_text||'Recebi sua mensagem. Vou continuar seu atendimento.'; return [{json:{...src,answer}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [780, 0], "id": "acbd463a-0bbd-4232-a35f-7379c97bb10f", "name": "Extract Answer"
+      "parameters": {
+        "jsCode": "const mime=$json.mime_type||'image/jpeg'; const v=String($json.base64||''); const raw=v.includes(',')?v.split(',').pop():v; if(!raw) throw new Error('Evolution não enviou base64 da imagem.'); return [{json:{...$json,ai_content:[{type:'input_text',text:'Analise a imagem do cliente e considere esta legenda/contexto: '+($json.body||'')},{type:'input_image',image_url:'data:'+mime+';base64,'+raw}]}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-300, 0],
+      "id": "72d1c401-29ce-43cc-bbec-6ccf12aef670",
+      "name": "Prepare Image Context"
     },
     {
-      "parameters": { "method": "POST", "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/inbound'}}", "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$env.NEGOCIAJA_HML_BASIC_AUTH}}" }, { "name": "Content-Type", "value": "application/json" }] }, "sendBody": true, "contentType": "raw", "rawContentType": "application/json", "body": "={{ JSON.stringify({provider:$json.provider,external_event_id:$json.external_event_id,channel_type:$json.channel_type,channel_name:$json.channel_name,external_conversation_id:$json.external_conversation_id,customer_name:$json.customer_name,phone:$json.phone,content_type:$json.content_type,body:$json.body,transcript:$json.transcript||'',mime_type:$json.mime_type}) }}", "options": {} },
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1020, 0], "id": "bfb611e3-4878-48f8-88a2-d1ad632e075b", "name": "Log Inbound NegocIAJa"
+      "parameters": {
+        "jsCode": "return [{json:{...$json,ai_content:[{type:'input_text',text:$json.body||'Cliente enviou uma mensagem sem texto.'}]}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-300, 220],
+      "id": "16c90b41-4dda-4e5b-90df-2a414295d142",
+      "name": "Prepare Text Context"
     },
     {
-      "parameters": { "jsCode": "const src=$('Extract Answer').item.json; return [{json:{...src,conversation_id:$json.data?.conversation_id||$json.conversation_id||'',answer:src.answer}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1260, 0], "id": "6c809900-fded-45e9-85ef-0711ac09e8d5", "name": "Join Conversation"
+      "parameters": {
+        "jsCode": "const j=$json; const content=j.ai_content||[{type:'input_text',text:j.body||j.transcript||''}]; return [{json:{...j,openai_body:{model:'gpt-5-mini',instructions:'Você é o agente comercial do NegocIAJá. Responda em português brasileiro, com clareza e foco em atendimento e venda. Não invente preço, estoque, pedido ou dados do cliente. Quando precisar de informação operacional que não esteja no contexto, diga que precisa consultar o sistema.',input:[{role:'user',content}]}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 0],
+      "id": "028159da-8179-489f-8619-4a30007c354b",
+      "name": "Build AI Request"
     },
     {
-      "parameters": { "method": "POST", "url": "={{$env.EVOLUTION_API_URL + '/message/sendText/' + $json.instance}}", "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{$env.EVOLUTION_API_KEY}}" }, { "name": "Content-Type", "value": "application/json" }] }, "sendBody": true, "contentType": "raw", "rawContentType": "application/json", "body": "={{ JSON.stringify({number:$json.phone,text:$json.answer}) }}", "options": {} },
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1500, 0], "id": "52d6d8d2-c872-4059-a082-139372897739", "name": "Send WhatsApp Evolution"
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "=Bearer {{$env.OPENAI_API_KEY}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.openai_body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [420, 0],
+      "id": "5e260e30-e05e-43a9-b06d-9e2bc0ce1121",
+      "name": "OpenAI Responses"
     },
     {
-      "parameters": { "jsCode": "const src=$('Join Conversation').item.json; const ref=$json.key?.id||$json.id||''; return [{json:{...src,provider_reference:String(ref)}}];" },
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1740, 0], "id": "527bb000-43ec-4570-8725-7179e94c77b4", "name": "Prepare Outbound Log"
+      "parameters": {
+        "jsCode": "const src=$('Build AI Request').item.json; const out=Array.isArray($json.output)?$json.output:[]; let answer=''; for(const item of out){for(const c of (item.content||[])){if(c.type==='output_text'&&c.text) answer+=c.text;}} answer=answer||$json.output_text||'Recebi sua mensagem. Vou continuar seu atendimento.'; return [{json:{...src,answer}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "id": "acbd463a-0bbd-4232-a35f-7379c97bb10f",
+      "name": "Extract Answer"
     },
     {
-      "parameters": { "method": "POST", "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/outbound'}}", "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$env.NEGOCIAJA_HML_BASIC_AUTH}}" }, { "name": "Content-Type", "value": "application/json" }] }, "sendBody": true, "contentType": "raw", "rawContentType": "application/json", "body": "={{ JSON.stringify({conversation_id:$json.conversation_id,provider:'evolution',destination:$json.phone,content_type:'text',body:$json.answer,provider_reference:$json.provider_reference}) }}", "options": {} },
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1980, 0], "id": "0eedbf28-f343-41ca-b6e4-a1acc281b0e1", "name": "Log Outbound NegocIAJa"
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/inbound'}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{$env.NEGOCIAJA_HML_BASIC_AUTH}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({provider:$json.provider,external_event_id:$json.external_event_id,channel_type:$json.channel_type,channel_name:$json.channel_name,external_conversation_id:$json.external_conversation_id,customer_name:$json.customer_name,phone:$json.phone,content_type:$json.content_type,body:$json.body,transcript:$json.transcript||'',mime_type:$json.mime_type}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 0],
+      "id": "bfb611e3-4878-48f8-88a2-d1ad632e075b",
+      "name": "Log Inbound NegocIAJa"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src=$('Extract Answer').item.json; return [{json:{...src,conversation_id:$json.data?.conversation_id||$json.conversation_id||'',answer:src.answer}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 0],
+      "id": "6c809900-fded-45e9-85ef-0711ac09e8d5",
+      "name": "Join Conversation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL + '/message/sendText/' + $json.instance}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "apikey", "value": "={{$env.EVOLUTION_API_KEY}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({number:$json.phone,text:$json.answer}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1380, 0],
+      "id": "52d6d8d2-c872-4059-a082-139372897739",
+      "name": "Send WhatsApp Evolution"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src=$('Join Conversation').item.json; const ref=$json.key?.id||$json.id||''; return [{json:{...src,provider_reference:String(ref)}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1620, 0],
+      "id": "527bb000-43ec-4570-8725-7179e94c77b4",
+      "name": "Prepare Outbound Log"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/outbound'}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{$env.NEGOCIAJA_HML_BASIC_AUTH}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({conversation_id:$json.conversation_id,provider:'evolution',destination:$json.phone,content_type:'text',body:$json.answer,provider_reference:$json.provider_reference}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1860, 0],
+      "id": "0eedbf28-f343-41ca-b6e4-a1acc281b0e1",
+      "name": "Log Outbound NegocIAJa"
     }
   ],
   "connections": {
-    "Evolution Webhook": { "main": [[{ "node": "Normalize Evolution", "type": "main", "index": 0 }]] },
-    "Normalize Evolution": { "main": [[{ "node": "Route Modality", "type": "main", "index": 0 }]] },
-    "Route Modality": { "main": [[{ "node": "Audio Base64 to Binary", "type": "main", "index": 0 }],[{ "node": "Prepare Image", "type": "main", "index": 0 }],[{ "node": "Prepare Text", "type": "main", "index": 0 }]] },
-    "Audio Base64 to Binary": { "main": [[{ "node": "Transcribe Audio", "type": "main", "index": 0 }]] },
-    "Transcribe Audio": { "main": [[{ "node": "Audio Message", "type": "main", "index": 0 }]] },
-    "Audio Message": { "main": [[{ "node": "Build AI Request", "type": "main", "index": 0 }]] },
-    "Prepare Image": { "main": [[{ "node": "Build AI Request", "type": "main", "index": 0 }]] },
-    "Prepare Text": { "main": [[{ "node": "Build AI Request", "type": "main", "index": 0 }]] },
-    "Build AI Request": { "main": [[{ "node": "OpenAI Responses", "type": "main", "index": 0 }]] },
-    "OpenAI Responses": { "main": [[{ "node": "Extract Answer", "type": "main", "index": 0 }]] },
-    "Extract Answer": { "main": [[{ "node": "Log Inbound NegocIAJa", "type": "main", "index": 0 }]] },
-    "Log Inbound NegocIAJa": { "main": [[{ "node": "Join Conversation", "type": "main", "index": 0 }]] },
-    "Join Conversation": { "main": [[{ "node": "Send WhatsApp Evolution", "type": "main", "index": 0 }]] },
-    "Send WhatsApp Evolution": { "main": [[{ "node": "Prepare Outbound Log", "type": "main", "index": 0 }]] },
-    "Prepare Outbound Log": { "main": [[{ "node": "Log Outbound NegocIAJa", "type": "main", "index": 0 }]] }
+    "Evolution Webhook": {"main": [[{"node": "Normalize Evolution", "type": "main", "index": 0}]]},
+    "Normalize Evolution": {"main": [[{"node": "Route Modality", "type": "main", "index": 0}]]},
+    "Route Modality": {"main": [[{"node": "Audio Base64 to Binary", "type": "main", "index": 0}], [{"node": "Prepare Image Context", "type": "main", "index": 0}], [{"node": "Prepare Text Context", "type": "main", "index": 0}]]},
+    "Audio Base64 to Binary": {"main": [[{"node": "Transcribe Audio", "type": "main", "index": 0}]]},
+    "Transcribe Audio": {"main": [[{"node": "Prepare Audio Context", "type": "main", "index": 0}]]},
+    "Prepare Audio Context": {"main": [[{"node": "Build AI Request", "type": "main", "index": 0}]]},
+    "Prepare Image Context": {"main": [[{"node": "Build AI Request", "type": "main", "index": 0}]]},
+    "Prepare Text Context": {"main": [[{"node": "Build AI Request", "type": "main", "index": 0}]]},
+    "Build AI Request": {"main": [[{"node": "OpenAI Responses", "type": "main", "index": 0}]]},
+    "OpenAI Responses": {"main": [[{"node": "Extract Answer", "type": "main", "index": 0}]]},
+    "Extract Answer": {"main": [[{"node": "Log Inbound NegocIAJa", "type": "main", "index": 0}]]},
+    "Log Inbound NegocIAJa": {"main": [[{"node": "Join Conversation", "type": "main", "index": 0}]]},
+    "Join Conversation": {"main": [[{"node": "Send WhatsApp Evolution", "type": "main", "index": 0}]]},
+    "Send WhatsApp Evolution": {"main": [[{"node": "Prepare Outbound Log", "type": "main", "index": 0}]]},
+    "Prepare Outbound Log": {"main": [[{"node": "Log Outbound NegocIAJa", "type": "main", "index": 0}]]}
   },
   "pinData": {},
-  "settings": { "executionOrder": "v1" },
+  "settings": {"executionOrder": "v1"},
   "active": false,
-  "meta": { "templateCredsSetupCompleted": false },
+  "meta": {"templateCredsSetupCompleted": false},
   "tags": []
 }
