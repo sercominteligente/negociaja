@@ -6,44 +6,12 @@
   const api=async(path,opt={})=>{const headers={...(opt.headers||{})};if(opt.body!==undefined&&!headers['content-type'])headers['content-type']='application/json';const r=await fetch(path,{...opt,headers});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||`HTTP ${r.status}`);return p.data};
   const toast=(m)=>{const e=$('#toast');if(!e)return;e.textContent=String(m);e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500)};
   let orders=[];let documents=[];
-
   const docLabels={quote:'Orçamento',order:'Pedido',receipt:'Recibo',invoice:'Fatura'};
-
-  async function generate(type,order){
-    const label=docLabels[type]||type;
-    try{
-      const data=await api(`/api/ops/documents/${type}/${encodeURIComponent(order.id)}`,{method:'POST',body:'{}'});
-      toast(`${label} ${data.document_number} gerado`);
-      await loadDocuments();
-      if(data.view_url)window.open(data.view_url,'_blank','noopener');
-    }catch(e){toast(e.message||`Não foi possível gerar ${label.toLowerCase()}.`)}
-  }
-
-  function renderOrders(){
-    const box=$('#orders');box.replaceChildren();
-    for(const order of orders.slice(0,20)){
-      const row=node('article','row');const info=node('div');
-      info.append(node('strong','',order.public_code||'Pedido'),node('small','',`${order.customer_name||'Cliente'} • ${money(order.total_cents)} • ${order.status||'novo'}`));
-      const actions=node('div','actions');
-      for(const type of ['quote','order','receipt','invoice']){const b=node('button',type==='order'?'btnx primary':'btnx',docLabels[type]);b.type='button';b.addEventListener('click',()=>generate(type,order));actions.append(b)}
-      row.append(info,actions);box.append(row);
-    }
-    if(!orders.length)box.append(node('div','empty','Nenhum pedido disponível. Crie uma venda no painel primeiro.'));
-  }
-
-  function renderDocuments(){
-    const box=$('#documents');box.replaceChildren();$('#count').textContent=String(documents.length);
-    for(const doc of documents){
-      const row=node('article','row');const info=node('div');
-      info.append(node('strong','',doc.document_number||'Documento'),node('small','',`${docLabels[doc.document_type]||doc.document_type||'Documento'} • ${date(doc.created_at)}`));
-      const actions=node('div','actions');const view=node('button','btnx','Abrir / PDF');view.type='button';view.addEventListener('click',()=>window.open(`/api/ops/documents/${encodeURIComponent(doc.id)}/view`,'_blank','noopener'));actions.append(view);row.append(info,actions);box.append(row);
-    }
-    if(!documents.length)box.append(node('div','empty','Nenhum documento emitido ainda.'));
-  }
-
+  async function generate(type,order){const label=docLabels[type]||type;try{const data=await api(`/api/ops/documents/${type}/${encodeURIComponent(order.id)}`,{method:'POST',body:'{}'});toast(`${label} ${data.document_number} gerado em PDF`);await loadDocuments();window.open(data.pdf_url||data.view_url,'_blank','noopener')}catch(e){toast(e.message||`Não foi possível gerar ${label.toLowerCase()}.`)}}
+  function renderOrders(){const box=$('#orders');box.replaceChildren();for(const order of orders.slice(0,20)){const row=node('article','row');const info=node('div');info.append(node('strong','',order.public_code||'Pedido'),node('small','',`${order.customer_name||'Cliente'} • ${money(order.total_cents)} • ${order.status||'novo'}`));const actions=node('div','actions');for(const type of ['quote','order','receipt','invoice']){const b=node('button',type==='order'?'btnx primary':'btnx',docLabels[type]);b.type='button';b.addEventListener('click',()=>generate(type,order));actions.append(b)}row.append(info,actions);box.append(row)}if(!orders.length)box.append(node('div','empty','Nenhum pedido disponível. Crie uma venda no painel primeiro.'))}
+  function renderDocuments(){const box=$('#documents');box.replaceChildren();$('#count').textContent=String(documents.length);for(const doc of documents){const row=node('article','row');const info=node('div');info.append(node('strong','',doc.document_number||'Documento'),node('small','',`${docLabels[doc.document_type]||doc.document_type||'Documento'} • ${date(doc.created_at)}`));const actions=node('div','actions');const pdf=node('button','btnx primary','Abrir PDF');pdf.type='button';pdf.addEventListener('click',()=>window.open(`/api/ops/documents/${encodeURIComponent(doc.id)}/pdf`,'_blank','noopener'));const view=node('button','btnx','Prévia HTML');view.type='button';view.addEventListener('click',()=>window.open(`/api/ops/documents/${encodeURIComponent(doc.id)}/view`,'_blank','noopener'));actions.append(pdf,view);row.append(info,actions);box.append(row)}if(!documents.length)box.append(node('div','empty','Nenhum documento emitido ainda.'))}
   async function loadOrders(){orders=await api('/api/orders').then(v=>Array.isArray(v)?v:[]);renderOrders()}
   async function loadDocuments(){documents=await api('/api/ops/documents').then(v=>Array.isArray(v)?v:[]);renderDocuments()}
   async function load(){try{await Promise.all([loadOrders(),loadDocuments()])}catch(e){toast(e.message||'Falha ao carregar documentos.')}}
-  $('#refresh')?.addEventListener('click',load);
-  load();
+  $('#refresh')?.addEventListener('click',load);load();
 })();
