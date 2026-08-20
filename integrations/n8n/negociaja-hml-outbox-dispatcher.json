@@ -1,0 +1,183 @@
+{
+  "name": "NegocIAJá HML - Outbox Dispatcher",
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "minutes", "minutesInterval": 1}]}},
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-960, 0],
+      "id": "outbox-schedule-001",
+      "name": "Every Minute"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/outbox/claim'}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "x-negociaja-outbox-token", "value": "={{$env.NEGOCIAJA_OUTBOX_TOKEN}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({limit:10}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-740, 0],
+      "id": "outbox-claim-002",
+      "name": "Claim Outbox"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$json.data||$json; const token=d.claim_token||''; return (d.items||[]).map(item=>({json:{...item,claim_token:token,payload:(()=>{try{return JSON.parse(item.payload_json||'{}')}catch{return {}}})()}}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "id": "outbox-expand-003",
+      "name": "Expand Claimed Items"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {"conditions": {"options": {"caseSensitive": false, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"leftValue": "={{$json.channel}}", "rightValue": "whatsapp", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "renameOutput": true, "outputKey": "whatsapp"},
+            {"conditions": {"options": {"caseSensitive": false, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"leftValue": "={{$json.channel}}", "rightValue": "telegram", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "renameOutput": true, "outputKey": "telegram"}
+          ]
+        },
+        "options": {"fallbackOutput": "extra"}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [-280, 0],
+      "id": "outbox-route-004",
+      "name": "Route Channel"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL + '/message/sendText/' + $env.EVOLUTION_INSTANCE}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "apikey", "value": "={{$env.EVOLUTION_API_KEY}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({number:$json.destination,text:$json.payload.message||$json.payload.text||''}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, -160],
+      "id": "outbox-wa-send-005",
+      "name": "Send WhatsApp Evolution"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src=$('Route Channel').item.json; const ref=$json.key?.id||$json.id||$json.messageId||''; return [{json:{...src,provider_reference:String(ref)}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, -160],
+      "id": "outbox-wa-result-006",
+      "name": "Normalize WhatsApp Result"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/outbox/' + $json.id + '/ack'}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "x-negociaja-outbox-token", "value": "={{$env.NEGOCIAJA_OUTBOX_TOKEN}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({status:'sent',claim_token:$json.claim_token,provider_reference:$json.provider_reference}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, -160],
+      "id": "outbox-wa-ack-007",
+      "name": "Ack WhatsApp Sent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage'}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({chat_id:$json.destination,text:$json.payload.message||$json.payload.text||''}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, 120],
+      "id": "outbox-tg-send-008",
+      "name": "Send Telegram"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src=$('Route Channel').item.json; const ref=$json.result?.message_id||$json.message_id||''; return [{json:{...src,provider_reference:String(ref)}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 120],
+      "id": "outbox-tg-result-009",
+      "name": "Normalize Telegram Result"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/outbox/' + $json.id + '/ack'}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "x-negociaja-outbox-token", "value": "={{$env.NEGOCIAJA_OUTBOX_TOKEN}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({status:'sent',claim_token:$json.claim_token,provider_reference:$json.provider_reference}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 120],
+      "id": "outbox-tg-ack-010",
+      "name": "Ack Telegram Sent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEGOCIAJA_HML_URL + '/api/integrations/outbox/' + $json.id + '/ack'}}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "x-negociaja-outbox-token", "value": "={{$env.NEGOCIAJA_OUTBOX_TOKEN}}"}, {"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({status:'failed',claim_token:$json.claim_token,retryable:false,error:'Canal não suportado pelo dispatcher n8n'}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, 340],
+      "id": "outbox-fallback-011",
+      "name": "Reject Unsupported Channel"
+    }
+  ],
+  "connections": {
+    "Every Minute": {"main": [[{"node": "Claim Outbox", "type": "main", "index": 0}]]},
+    "Claim Outbox": {"main": [[{"node": "Expand Claimed Items", "type": "main", "index": 0}]]},
+    "Expand Claimed Items": {"main": [[{"node": "Route Channel", "type": "main", "index": 0}]]},
+    "Route Channel": {"main": [[{"node": "Send WhatsApp Evolution", "type": "main", "index": 0}], [{"node": "Send Telegram", "type": "main", "index": 0}], [{"node": "Reject Unsupported Channel", "type": "main", "index": 0}]]},
+    "Send WhatsApp Evolution": {"main": [[{"node": "Normalize WhatsApp Result", "type": "main", "index": 0}]]},
+    "Normalize WhatsApp Result": {"main": [[{"node": "Ack WhatsApp Sent", "type": "main", "index": 0}]]},
+    "Send Telegram": {"main": [[{"node": "Normalize Telegram Result", "type": "main", "index": 0}]]},
+    "Normalize Telegram Result": {"main": [[{"node": "Ack Telegram Sent", "type": "main", "index": 0}]]}
+  },
+  "pinData": {},
+  "settings": {"executionOrder": "v1"},
+  "active": false,
+  "versionId": "d4ddfe14-a6b2-443c-8b2d-c42ba21b3cca",
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}
