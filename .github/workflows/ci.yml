@@ -18,30 +18,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-
       - name: Validate project
         run: npm run check
-
       - name: Apply D1 migrations locally
         run: npm run db:local
-
       - name: Smoke test Worker and D1 locally
         shell: bash
         run: |
           set -euo pipefail
-          npx wrangler dev \
-            --port 8787 \
-            --var APP_ENVIRONMENT:development \
-            --var DEFAULT_TENANT_ID:tenant_demo \
-            > /tmp/negociaja-wrangler.log 2>&1 &
+          npx wrangler dev --port 8787 --var APP_ENVIRONMENT:development --var DEFAULT_TENANT_ID:tenant_demo > /tmp/negociaja-wrangler.log 2>&1 &
           WRANGLER_PID=$!
           trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
           READY=0
@@ -51,21 +42,15 @@ jobs:
           done
           if [ "$READY" -ne 1 ]; then cat /tmp/negociaja-wrangler.log; exit 1; fi
           node scripts/smoke-test.mjs
-
       - name: Apply HML D1 migrations locally
         run: npx wrangler d1 migrations apply DB --local --env hml
-
       - name: Smoke test authenticated HML locally
         shell: bash
         env:
           HML_SMOKE_PASSWORD: ci-hml-secret
         run: |
           set -euo pipefail
-          npx wrangler dev \
-            --env hml \
-            --port 8788 \
-            --var HML_PASSWORD:ci-hml-secret \
-            > /tmp/negociaja-hml-wrangler.log 2>&1 &
+          npx wrangler dev --env hml --port 8788 --var HML_PASSWORD:ci-hml-secret > /tmp/negociaja-hml-wrangler.log 2>&1 &
           WRANGLER_PID=$!
           trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
           READY=0
@@ -75,11 +60,10 @@ jobs:
             sleep 1
           done
           if [ "$READY" -ne 1 ]; then cat /tmp/negociaja-hml-wrangler.log; exit 1; fi
-
           node scripts/hml-smoke-test.mjs
           node scripts/documents-smoke-test.mjs
           node scripts/core12-smoke-test.mjs
           node scripts/saas-rbac-smoke-test.mjs
-
+          node scripts/catalog-orders-ai-smoke-test.mjs
           npx wrangler d1 execute DB --local --env hml --command "UPDATE tenant_subscriptions SET status='active', current_period_end=datetime('now','-10 day'), trial_ends_at=datetime('now','-10 day'), grace_until=datetime('now','-5 day') WHERE tenant_id='tenant_demo';"
           node scripts/license-suspension-smoke.mjs
