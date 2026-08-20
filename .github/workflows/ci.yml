@@ -66,6 +66,7 @@ jobs:
           node scripts/core12-smoke-test.mjs
           node scripts/saas-rbac-smoke-test.mjs
           node scripts/catalog-orders-ai-smoke-test.mjs
+          node scripts/catalog-image-smoke-test.mjs
           node scripts/approvals-onboarding-smoke-test.mjs
           node scripts/action-execution-smoke-test.mjs
           node scripts/outbox-dispatch-smoke-test.mjs

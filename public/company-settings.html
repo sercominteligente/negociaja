@@ -7,10 +7,11 @@
   <title>Minha Empresa • NegocIAJá!</title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/company-settings.css">
+  <style>.platform-mark{display:flex;align-items:center;gap:10px}.platform-mark img{width:128px;max-height:46px;object-fit:contain}@media(max-width:760px){.platform-mark img{width:102px}}</style>
 </head>
 <body>
   <header class="topbar">
-    <a href="/app" class="back">← Voltar ao painel</a>
+    <div class="platform-mark"><img src="https://negociaja.com.br/brand/logo-primary.png" alt="NegocIAJá!"><a href="/app" class="back">← Voltar ao painel</a></div>
     <div><strong>Minha Empresa</strong><small>Identidade, catálogo e documentos</small></div>
     <button class="save" id="saveAll" type="button">Salvar alterações</button>
   </header>
@@ -146,5 +147,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="/company-settings.js"></script>
+  <script src="/brand-shell.js"></script>
 </body>
 </html>
