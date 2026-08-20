@@ -8,10 +8,11 @@
   <title>Super Admin • NegocIAJá!</title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/super-admin.css">
+  <style>.official-sa-logo{display:block;width:176px;max-width:100%;height:auto;object-fit:contain}@media(max-width:760px){.official-sa-logo{width:164px}}</style>
 </head>
 <body class="sa-body">
   <aside class="sa-sidebar" id="saSidebar">
-    <a class="sa-brand" href="#overview">Negoc<span>IA</span><b>Já!</b><small>CONTROL CENTER</small></a>
+    <a class="sa-brand" href="#overview" aria-label="NegocIAJá!"><img class="official-sa-logo" src="/brand/logo-primary.webp" alt="NegocIAJá!"></a>
     <nav class="sa-nav" id="saNav">
       <a class="active" href="#overview" data-view="overview">◈ <span>Visão geral</span></a>
       <a href="#tenants" data-view="tenants">▦ <span>Empresas</span></a>
@@ -26,6 +27,8 @@
       <a href="#health" data-view="health">♥ <span>Saúde</span></a>
       <a href="#logs" data-view="logs">≡ <span>Logs</span></a>
       <a href="#settings" data-view="settings">⚙ <span>Configurações</span></a>
+      <a href="/integration-health.html">♥ <span>Saúde detalhada</span></a>
+      <a href="/release-readiness.html">✓ <span>Prontidão HML</span></a>
     </nav>
     <div class="sa-sidebar-foot"><i></i><div><strong>Plataforma</strong><small id="saEnvironment">HML</small></div></div>
   </aside>

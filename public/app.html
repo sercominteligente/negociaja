@@ -8,11 +8,12 @@
   <title>Painel • NegocIAJá!</title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/app.css">
+  <style>.official-panel-logo{display:block;width:172px;max-width:100%;height:auto;object-fit:contain}.official-panel-logo-mobile{display:block;width:132px;height:auto;object-fit:contain}@media(max-width:760px){.official-panel-logo{width:164px}.official-panel-logo-mobile{width:122px}}</style>
 </head>
 <body class="dashboard">
   <header class="dash-top admin-top">
     <button class="touch menu" id="menuBtn" aria-label="Abrir menu">☰</button>
-    <a class="admin-mobile-brand" href="#overview" aria-label="NegocIAJá!">Negoc<span>IA</span><b>Já!</b></a>
+    <a class="admin-mobile-brand" href="#overview" aria-label="NegocIAJá!"><img class="official-panel-logo-mobile" src="/brand/logo-primary.webp" alt="NegocIAJá!"></a>
     <div class="admin-top-title"><strong>Resumo</strong><small>Visão geral do seu negócio em tempo real.</small></div>
     <div class="admin-top-actions">
       <button class="admin-filter" type="button" disabled>▣ Hoje⌄</button>
@@ -22,12 +23,12 @@
     </div>
   </header>
   <aside class="sidebar admin-sidebar" id="sidebar">
-    <a class="admin-brand" href="#overview">Negoc<span>IA</span><b>Já!</b></a>
+    <a class="admin-brand" href="#overview" aria-label="NegocIAJá!"><img class="official-panel-logo" src="/brand/logo-primary.webp" alt="NegocIAJá!"></a>
     <nav class="admin-nav">
       <a class="active" href="#overview">⌂ <span>Resumo</span></a>
       <a href="#conversations">▢ <span>Caixa de Entrada</span><em id="conversationBadge">0</em></a>
       <a href="#orders">▣ <span>Pedidos</span></a><a href="#catalog">▤ <span>Catálogo</span></a><a href="#customers">♙ <span>Clientes</span></a><a href="#sales">↗ <span>Vendas</span></a><a href="#finance">▰ <span>Financeiro</span></a><a href="#reports">▥ <span>Relatórios</span></a><a href="#assistant">✦ <span>IA Assist</span><em>Novo</em></a>
-      <a href="/company-settings.html">⚙ <span>Minha Empresa</span></a><a href="/team.html">♟ <span>Equipe & Integrações</span></a><a href="#help" id="supportNav">? <span>Suporte inteligente</span></a>
+      <a href="/ai-approvals.html">◉ <span>Aprovações IA</span></a><a href="/company-settings.html">⚙ <span>Minha Empresa</span></a><a href="/team.html">♟ <span>Equipe & Integrações</span></a><a href="#help" id="supportNav">? <span>Suporte inteligente</span></a><a href="/onboarding.html">✓ <span>Primeiros passos</span></a><a href="/catalog-manager.html">▤ <span>Catálogo avançado</span></a><a href="/operations.html">▰ <span>Central Operacional</span></a>
     </nav>
     <div class="admin-profile"><span class="admin-user-avatar" id="sideOperatorInitial">N</span><div><strong id="sideOperatorName">NegocIAJá!</strong><small id="sessionEnvironment">Ambiente protegido</small></div></div>
   </aside>
