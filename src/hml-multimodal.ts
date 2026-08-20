@@ -74,7 +74,7 @@ async function inbound(request:Request,env:Env,tenantId:string,session:Session){
   const effectiveBody=contentType==='audio'&&transcript?transcript:body;
   const metadata={provider,external_event_id:externalEventId,transcript:transcript||null,analysis:input.analysis||null,mime_type:input.mime_type||null,file_name:input.file_name||null};
   await env.DB.batch([
-    env.DB.prepare("INSERT INTO messages (id,conversation_id,direction,sender_type,content_type,body,file_key,metadata_json) VALUES (?,?,'inbound','customer',?,?,?,?,?)").bind(messageId,conversation.id,contentType,effectiveBody||null,fileKey||null,JSON.stringify(metadata)),
+    env.DB.prepare("INSERT INTO messages (id,conversation_id,direction,sender_type,content_type,body,file_key,metadata_json) VALUES (?,?,'inbound','customer',?,?,?,?)").bind(messageId,conversation.id,contentType,effectiveBody||null,fileKey||null,JSON.stringify(metadata)),
     env.DB.prepare("UPDATE conversations SET customer_id=?,status='ai',last_message_at=datetime('now') WHERE id=?").bind(customerId,conversation.id),
     env.DB.prepare("INSERT INTO integration_events (id,tenant_id,provider,external_event_id,direction,channel_type,conversation_id,message_id,status,payload_json) VALUES (?,?,?,?,'inbound',?,?,?,'processed',?)").bind(id('ievt'),tenantId,provider,externalEventId,channelType,conversation.id,messageId,JSON.stringify({actor:session.email||null})),
     env.DB.prepare("INSERT INTO audit_logs (id,tenant_id,actor_type,actor_id,action,entity_type,entity_id,payload_json) VALUES (?,?,'integration',?,'message.inbound','conversation',?,?)").bind(id('audit'),tenantId,provider,conversation.id,JSON.stringify({content_type:contentType,external_event_id:externalEventId}))
