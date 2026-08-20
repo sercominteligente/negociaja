@@ -48,9 +48,10 @@ jobs:
         shell: bash
         env:
           HML_SMOKE_PASSWORD: ci-hml-secret
+          HML_OUTBOX_SERVICE_TOKEN: ci-outbox-token-strong-value-2026
         run: |
           set -euo pipefail
-          npx wrangler dev --env hml --port 8788 --var HML_PASSWORD:ci-hml-secret > /tmp/negociaja-hml-wrangler.log 2>&1 &
+          npx wrangler dev --env hml --port 8788 --var HML_PASSWORD:ci-hml-secret --var OUTBOX_SERVICE_TOKEN:ci-outbox-token-strong-value-2026 > /tmp/negociaja-hml-wrangler.log 2>&1 &
           WRANGLER_PID=$!
           trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
           READY=0
@@ -67,5 +68,6 @@ jobs:
           node scripts/catalog-orders-ai-smoke-test.mjs
           node scripts/approvals-onboarding-smoke-test.mjs
           node scripts/action-execution-smoke-test.mjs
+          node scripts/outbox-dispatch-smoke-test.mjs
           npx wrangler d1 execute DB --local --env hml --command "UPDATE tenant_subscriptions SET status='active', current_period_end=datetime('now','-10 day'), trial_ends_at=datetime('now','-10 day'), grace_until=datetime('now','-5 day') WHERE tenant_id='tenant_demo';"
           node scripts/license-suspension-smoke.mjs
