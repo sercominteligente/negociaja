@@ -7,8 +7,8 @@ interface Env {
   ASSETS: Fetcher;
   APP_ENVIRONMENT: string;
   DEFAULT_TENANT_ID: string;
-  ACCESS_TEAM_DOMAIN?: string;
-  ACCESS_AUD?: string;
+  ACCESS_TEAM_DOMAIN: string;
+  ACCESS_AUD: string;
   HML_USERNAME?: string;
   HML_PASSWORD?: string;
 }
@@ -215,7 +215,6 @@ async function body(request: Request): Promise<Dict> {
 }
 
 const clean = (value: unknown, max = 180) => String(value ?? '').trim().slice(0, max);
-const activeInt = (value: unknown) => value === true || value === 1 || value === '1' ? 1 : 0;
 
 async function platformApi(request: Request, env: Env, url: URL, identity: Identity): Promise<Response> {
   const method = request.method.toUpperCase();
@@ -353,7 +352,7 @@ async function platformApi(request: Request, env: Env, url: URL, identity: Ident
     if (!email || !name) throw new PlatformError(400, 'Nome e e-mail são obrigatórios.');
     if (!['super_admin','support','member'].includes(globalRole)) throw new PlatformError(400, 'Papel global inválido.');
     if (!['owner','admin','manager','operator','viewer'].includes(role)) throw new PlatformError(400, 'Papel da empresa inválido.');
-    let platformUser = await env.DB.prepare('SELECT id FROM platform_users WHERE lower(email)=lower(?)').bind(email).first<{ id: string }>();
+    const platformUser = await env.DB.prepare('SELECT id FROM platform_users WHERE lower(email)=lower(?)').bind(email).first<{ id: string }>();
     const userId = platformUser?.id || id('puser');
     if (!platformUser) await env.DB.prepare('INSERT INTO platform_users (id,email,name,global_role,status) VALUES (?,?,?,?,?)').bind(userId,email,name,globalRole,'active').run();
     if (tenantId) {
@@ -434,7 +433,7 @@ async function tenantSession(env: Env, identity: Identity) {
     FROM tenant_memberships tm INNER JOIN tenants t ON t.id=tm.tenant_id
     WHERE tm.platform_user_id=? AND tm.status='active' AND t.status='active'
     ORDER BY t.name
-  `).bind(identity.platformUserId).all() : { results: [] };
+  `).bind(identity.platformUserId).all() : { results: [] as unknown[] };
   return json({ data: {
     tenant_id: identity.tenantId,
     email: identity.email,
