@@ -11,9 +11,14 @@ const platform = read('src/platform.ts');
 const hmlAuth = read('src/hml-auth.ts');
 const hmlWorker = read('src/hml.ts');
 const hmlBatch = read('src/hml-batch.ts');
+const hmlMultimodal = read('src/hml-multimodal.ts');
+const hmlFinal = read('src/hml-final.ts');
 const panel = read('public/app.js');
 const support = read('public/support.js');
 const landing = read('public/index.html');
+const n8nText = read('integrations/n8n/negociaja-hml-multimodal.json');
+let n8n;
+try { n8n = JSON.parse(n8nText); } catch { fail('n8n workflow JSON is invalid'); n8n = {}; }
 
 const wrangler = JSON.parse(wranglerText);
 if (wrangler?.main !== 'src/platform.ts') fail('Production SaaS platform gateway must remain the root Worker entry point');
@@ -25,7 +30,7 @@ if (wrangler?.assets?.binding !== 'ASSETS') fail('ASSETS binding changed unexpec
 const hml = wrangler?.env?.hml;
 if (!hml) fail('HML environment is missing');
 if (hml?.name !== 'negociaja-hml') fail('HML Worker name changed unexpectedly');
-if (hml?.main !== 'src/hml-auth.ts') fail('HML must use the auth-preserving isolated entrypoint');
+if (hml?.main !== 'src/hml-final.ts') fail('HML must use the final hardened isolated entrypoint');
 if (hml?.workers_dev !== true) fail('HML must use workers.dev until a protected custom domain is explicitly configured');
 if (hml?.vars?.APP_ENVIRONMENT !== 'hml') fail('HML APP_ENVIRONMENT must be hml');
 if (hml?.vars?.HML_USERNAME !== 'homologacao') fail('HML username changed unexpectedly');
@@ -58,16 +63,31 @@ requireText(hmlWorker, '/api/billing/summary', 'HML experience gateway');
 requireText(hmlBatch, '/api/ops/overview', 'HML operational gateway');
 requireText(hmlBatch, 'generated_documents', 'HML operational gateway');
 requireText(hmlBatch, 'platform_billing_events', 'HML operational gateway');
-requireText(hmlBatch, 'channels', 'HML operational gateway');
-requireText(hmlBatch, 'audit_logs', 'HML operational gateway');
+requireText(hmlMultimodal, '/api/integrations/inbound', 'HML multimodal gateway');
+requireText(hmlMultimodal, '/api/integrations/outbound', 'HML multimodal gateway');
+requireText(hmlMultimodal, 'integration_events', 'HML multimodal gateway');
+requireText(hmlFinal, "url.pathname==='/api/ops/channels'", 'HML final gateway');
+requireText(hmlFinal, 'canBill', 'HML final gateway');
 requireText(support, '/api/ops/overview', 'HML panel integration');
 requireText(support, '/api/ops/renewal', 'HML panel integration');
+
+if (n8n?.name !== 'NegocIAJá HML - Evolution Multimodal') fail('n8n workflow name changed unexpectedly');
+if (!Array.isArray(n8n?.nodes) || n8n.nodes.length < 10) fail('n8n workflow is unexpectedly incomplete');
+requireText(n8nText, 'OPENAI_API_KEY', 'n8n workflow');
+requireText(n8nText, 'NEGOCIAJA_HML_URL', 'n8n workflow');
+requireText(n8nText, 'EVOLUTION_API_URL', 'n8n workflow');
+requireText(n8nText, 'gpt-4o-mini-transcribe', 'n8n workflow');
+requireText(n8nText, 'gpt-5-mini', 'n8n workflow');
+forbidText(n8nText, 'sk-proj-', 'n8n workflow');
+forbidText(n8nText, 'cfut_', 'n8n workflow');
 
 forbidText(worker, 'x-tenant-id', 'Core Worker');
 forbidText(platform, 'x-tenant-id', 'Platform gateway');
 forbidText(hmlAuth, 'x-tenant-id', 'HML auth gateway');
 forbidText(hmlWorker, 'x-tenant-id', 'HML experience gateway');
 forbidText(hmlBatch, 'x-tenant-id', 'HML operational gateway');
+forbidText(hmlMultimodal, 'x-tenant-id', 'HML multimodal gateway');
+forbidText(hmlFinal, 'x-tenant-id', 'HML final gateway');
 forbidText(panel, 'x-tenant-id', 'Panel');
 forbidText(panel, '.innerHTML', 'Panel');
 forbidText(panel, 'insertAdjacentHTML', 'Panel');
