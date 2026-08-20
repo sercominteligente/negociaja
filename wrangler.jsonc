@@ -12,31 +12,10 @@
     "ACCESS_TEAM_DOMAIN": "https://bitter-cell-31bf.cloudflareaccess.com",
     "ACCESS_AUD": "f10e7d76c9531823e695b17cb3c938b5ff6584e68663ec2e65a820d3be85e218"
   },
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  },
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    "html_handling": "none",
-    "not_found_handling": "single-page-application",
-    "run_worker_first": true
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "negocia-ja-bd",
-      "database_id": "25ad2242-5226-467d-9f69-bbdd244fb2ca",
-      "migrations_dir": "./migrations"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "FILES",
-      "bucket_name": "negocia-ja-files"
-    }
-  ],
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "assets": { "directory": "./public", "binding": "ASSETS", "html_handling": "none", "not_found_handling": "single-page-application", "run_worker_first": true },
+  "d1_databases": [{ "binding": "DB", "database_name": "negocia-ja-bd", "database_id": "25ad2242-5226-467d-9f69-bbdd244fb2ca", "migrations_dir": "./migrations" }],
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "negocia-ja-files" }],
   "routes": [
     { "pattern": "negociaja.com.br", "custom_domain": true },
     { "pattern": "www.negociaja.com.br", "custom_domain": true },
@@ -45,25 +24,13 @@
   "env": {
     "hml": {
       "name": "negociaja-hml",
-      "main": "src/hml.ts",
+      "main": "src/hml-auth.ts",
       "workers_dev": true,
       "preview_urls": true,
       "routes": [],
-      "vars": {
-        "APP_ENVIRONMENT": "hml",
-        "DEFAULT_TENANT_ID": "tenant_demo",
-        "HML_USERNAME": "homologacao"
-      },
-      "d1_databases": [
-        {
-          "binding": "DB"
-        }
-      ],
-      "r2_buckets": [
-        {
-          "binding": "FILES"
-        }
-      ]
+      "vars": { "APP_ENVIRONMENT": "hml", "DEFAULT_TENANT_ID": "tenant_demo", "HML_USERNAME": "homologacao" },
+      "d1_databases": [{ "binding": "DB" }],
+      "r2_buckets": [{ "binding": "FILES" }]
     }
   }
 }
