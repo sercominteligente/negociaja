@@ -98,3 +98,4 @@ jobs:
           fi
 
           node scripts/hml-smoke-test.mjs
+          node scripts/documents-smoke-test.mjs
