@@ -31,7 +31,11 @@ const bool = (value: unknown) => value === true || value === 1 || value === '1';
 
 async function sessionFor(request: Request, env: Env): Promise<{ response?: Response; session?: Session }> {
   const sessionUrl = new URL('/api/session', request.url);
-  const response = await platform.fetch(new Request(sessionUrl, request), env);
+  const sessionRequest = new Request(sessionUrl.toString(), {
+    method: 'GET',
+    headers: request.headers
+  });
+  const response = await platform.fetch(sessionRequest, env);
   if (!response.ok) return { response };
   const payload = await response.clone().json().catch(() => ({})) as { data?: Session };
   return { session: payload.data || {} };
