@@ -24,7 +24,7 @@
   "env": {
     "hml": {
       "name": "negociaja-hml",
-      "main": "src/hml-final.ts",
+      "main": "src/hml-commerce.ts",
       "workers_dev": true,
       "preview_urls": true,
       "routes": [],
