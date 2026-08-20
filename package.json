@@ -20,6 +20,6 @@
     "check": "npm run typecheck && npm run js:check && npm run migration:check && npm run security:check && wrangler deploy --dry-run",
     "check:hml": "npm run typecheck && npm run js:check && npm run migration:check && npm run security:check && wrangler deploy --env hml --dry-run"
   },
-  "dependencies": { "jose": "6.2.8" },
+  "dependencies": { "jose": "6.2.8", "pdf-lib": "1.17.1" },
   "devDependencies": { "@cloudflare/workers-types": "5.20260813.1", "typescript": "5.9.2", "wrangler": "4.123.0" }
 }
