@@ -24,7 +24,7 @@
   "env": {
     "hml": {
       "name": "negociaja-hml",
-      "main": "src/hml-batch.ts",
+      "main": "src/hml-auth.ts",
       "workers_dev": true,
       "preview_urls": true,
       "routes": [],
