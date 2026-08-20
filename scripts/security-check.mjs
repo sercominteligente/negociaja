@@ -14,13 +14,13 @@ const forbidText = (source, text, label) => {
 
 const wranglerText = read('wrangler.jsonc');
 const worker = read('src/index.ts');
+const platform = read('src/platform.ts');
 const panel = read('public/app.js');
 const landing = read('public/index.html');
 
 const wrangler = JSON.parse(wranglerText);
-if (wrangler?.assets?.run_worker_first !== true) {
-  fail('wrangler assets.run_worker_first must remain true');
-}
+if (wrangler?.main !== 'src/platform.ts') fail('SaaS platform gateway must remain the Worker entry point');
+if (wrangler?.assets?.run_worker_first !== true) fail('wrangler assets.run_worker_first must remain true');
 if (wrangler?.d1_databases?.[0]?.binding !== 'DB') fail('D1 DB binding changed unexpectedly');
 if (wrangler?.r2_buckets?.[0]?.binding !== 'FILES') fail('R2 FILES binding changed unexpectedly');
 if (wrangler?.assets?.binding !== 'ASSETS') fail('ASSETS binding changed unexpectedly');
@@ -34,28 +34,28 @@ if (hml?.vars?.HML_USERNAME !== 'homologacao') fail('HML username changed unexpe
 if (Array.isArray(hml?.routes) && hml.routes.length !== 0) fail('HML must not inherit production routes');
 if (hml?.d1_databases?.[0]?.binding !== 'DB') fail('HML D1 DB binding is missing');
 if (hml?.r2_buckets?.[0]?.binding !== 'FILES') fail('HML R2 FILES binding is missing');
-if (hml?.d1_databases?.[0]?.database_id === wrangler?.d1_databases?.[0]?.database_id) {
-  fail('HML must never bind the production D1 database');
-}
-if (hml?.r2_buckets?.[0]?.bucket_name === wrangler?.r2_buckets?.[0]?.bucket_name) {
-  fail('HML must never bind the production R2 bucket');
-}
+if (hml?.d1_databases?.[0]?.database_id === wrangler?.d1_databases?.[0]?.database_id) fail('HML must never bind the production D1 database');
+if (hml?.r2_buckets?.[0]?.bucket_name === wrangler?.r2_buckets?.[0]?.bucket_name) fail('HML must never bind the production R2 bucket');
 
-requireText(worker, 'cf-access-jwt-assertion', 'Worker');
-requireText(worker, 'jwtVerify', 'Worker');
-requireText(worker, 'ACCESS_AUD', 'Worker');
-requireText(worker, 'ACCESS_TEAM_DOMAIN', 'Worker');
-requireText(worker, "origin !== `https://${APP_HOST}`", 'Worker');
-requireText(worker, 'MAX_JSON_BODY_BYTES', 'Worker');
-requireText(worker, 'content-security-policy', 'Worker');
-requireText(worker, 'strict-transport-security', 'Worker');
-requireText(worker, 'x-robots-tag', 'Worker');
-requireText(worker, 'HML_PASSWORD', 'Worker');
-requireText(worker, 'hmlAuthorized', 'Worker');
-requireText(worker, 'www-authenticate', 'Worker');
-requireText(worker, "env.APP_ENVIRONMENT === 'hml'", 'Worker');
+requireText(worker, 'cf-access-jwt-assertion', 'Core Worker');
+requireText(worker, 'jwtVerify', 'Core Worker');
+requireText(worker, 'MAX_JSON_BODY_BYTES', 'Core Worker');
+requireText(worker, 'content-security-policy', 'Core Worker');
+requireText(worker, 'strict-transport-security', 'Core Worker');
+requireText(worker, 'HML_PASSWORD', 'Core Worker');
 
-forbidText(worker, 'x-tenant-id', 'Worker');
+requireText(platform, 'tenant_memberships', 'Platform gateway');
+requireText(platform, 'platform_users', 'Platform gateway');
+requireText(platform, 'global_role', 'Platform gateway');
+requireText(platform, 'tenantPermission', 'Platform gateway');
+requireText(platform, 'x-negociaja-context', 'Platform gateway');
+requireText(platform, "globalRole === 'super_admin'", 'Platform gateway');
+requireText(platform, 'cf-access-jwt-assertion', 'Platform gateway');
+requireText(platform, 'jwtVerify', 'Platform gateway');
+requireText(platform, "origin !== `https://${APP_HOST}`", 'Platform gateway');
+
+forbidText(worker, 'x-tenant-id', 'Core Worker');
+forbidText(platform, 'x-tenant-id', 'Platform gateway');
 forbidText(panel, 'x-tenant-id', 'Panel');
 forbidText(panel, '.innerHTML', 'Panel');
 forbidText(panel, 'insertAdjacentHTML', 'Panel');
