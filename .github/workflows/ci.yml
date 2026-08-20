@@ -44,22 +44,12 @@ jobs:
             > /tmp/negociaja-wrangler.log 2>&1 &
           WRANGLER_PID=$!
           trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
-
           READY=0
           for _ in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:8787/api/health > /dev/null; then
-              READY=1
-              break
-            fi
+            if curl --fail --silent --show-error http://127.0.0.1:8787/api/health > /dev/null; then READY=1; break; fi
             sleep 1
           done
-
-          if [ "$READY" -ne 1 ]; then
-            echo "Worker did not become ready"
-            cat /tmp/negociaja-wrangler.log
-            exit 1
-          fi
-
+          if [ "$READY" -ne 1 ]; then cat /tmp/negociaja-wrangler.log; exit 1; fi
           node scripts/smoke-test.mjs
 
       - name: Apply HML D1 migrations locally
@@ -78,24 +68,16 @@ jobs:
             > /tmp/negociaja-hml-wrangler.log 2>&1 &
           WRANGLER_PID=$!
           trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
-
           READY=0
           for _ in $(seq 1 30); do
-            STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' \
-              --user homologacao:ci-hml-secret \
-              http://127.0.0.1:8788/api/health || true)
-            if [ "$STATUS" = "200" ]; then
-              READY=1
-              break
-            fi
+            STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' --user homologacao:ci-hml-secret http://127.0.0.1:8788/api/health || true)
+            if [ "$STATUS" = "200" ]; then READY=1; break; fi
             sleep 1
           done
-
-          if [ "$READY" -ne 1 ]; then
-            echo "HML Worker did not become ready"
-            cat /tmp/negociaja-hml-wrangler.log
-            exit 1
-          fi
+          if [ "$READY" -ne 1 ]; then cat /tmp/negociaja-hml-wrangler.log; exit 1; fi
 
           node scripts/hml-smoke-test.mjs
           node scripts/documents-smoke-test.mjs
+
+          npx wrangler d1 execute DB --local --env hml --command "UPDATE tenant_subscriptions SET status='active', current_period_end=datetime('now','-10 day'), trial_ends_at=datetime('now','-10 day'), grace_until=datetime('now','-5 day') WHERE tenant_id='tenant_demo';"
+          node scripts/license-suspension-smoke.mjs
