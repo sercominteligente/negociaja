@@ -1,78 +1,31 @@
 import app from './hml-auth';
 
 interface Env {
-  DB: D1Database;
-  FILES: R2Bucket;
-  ASSETS: Fetcher;
-  APP_ENVIRONMENT: string;
-  DEFAULT_TENANT_ID: string;
-  ACCESS_TEAM_DOMAIN: string;
-  ACCESS_AUD: string;
-  HML_USERNAME?: string;
-  HML_PASSWORD?: string;
+  DB: D1Database; FILES: R2Bucket; ASSETS: Fetcher; APP_ENVIRONMENT: string; DEFAULT_TENANT_ID: string;
+  ACCESS_TEAM_DOMAIN: string; ACCESS_AUD: string; HML_USERNAME?: string; HML_PASSWORD?: string;
 }
-
 type Session = { tenant_id?: string; email?: string; role?: string; global_role?: string };
 type Dict = Record<string, unknown>;
-
+class HttpError extends Error { constructor(public status:number,message:string){super(message);} }
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const id=(p:string)=>`${p}_${crypto.randomUUID()}`;
 const clean=(v:unknown,max=1000)=>String(v??'').trim().slice(0,max);
-
-async function sessionFor(request:Request,env:Env):Promise<{session?:Session;response?:Response}>{
-  const r=await app.fetch(new Request(new URL('/api/session',request.url).toString(),{method:'GET',headers:request.headers}),env);
-  if(!r.ok)return{response:r};
-  const p=await r.clone().json().catch(()=>({})) as {data?:Session};
-  return{session:p.data||{}};
-}
-
+async function sessionFor(request:Request,env:Env):Promise<{session?:Session;response?:Response}>{const r=await app.fetch(new Request(new URL('/api/session',request.url).toString(),{method:'GET',headers:request.headers}),env);if(!r.ok)return{response:r};const p=await r.clone().json().catch(()=>({})) as {data?:Session};return{session:p.data||{}};}
 async function readBody(request:Request):Promise<Dict>{
   const origin=request.headers.get('origin');
-  if(origin&&origin!==new URL(request.url).origin)throw new Response(JSON.stringify({error:'Origem não autorizada.'}),{status:403,headers:{'content-type':'application/json'}});
-  if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))throw new Response(JSON.stringify({error:'Envie application/json.'}),{status:415,headers:{'content-type':'application/json'}});
-  const text=await request.text();
-  if(text.length>262144)throw new Response(JSON.stringify({error:'Payload muito grande.'}),{status:413,headers:{'content-type':'application/json'}});
-  try{const v=JSON.parse(text||'{}');if(!v||typeof v!=='object'||Array.isArray(v))throw new Error();return v as Dict}catch{throw new Response(JSON.stringify({error:'JSON inválido.'}),{status:400,headers:{'content-type':'application/json'}});}
+  if(origin&&origin!==new URL(request.url).origin)throw new HttpError(403,'Origem não autorizada.');
+  if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))throw new HttpError(415,'Envie application/json.');
+  const text=await request.text();if(text.length>262144)throw new HttpError(413,'Payload muito grande.');
+  try{const v=JSON.parse(text||'{}');if(!v||typeof v!=='object'||Array.isArray(v))throw new Error();return v as Dict;}catch{throw new HttpError(400,'JSON inválido.');}
 }
-
-async function ensureCustomer(env:Env,tenantId:string,name:string,phone:string){
-  if(phone){const found=await env.DB.prepare('SELECT id FROM customers WHERE tenant_id=? AND phone=? LIMIT 1').bind(tenantId,phone).first<{id:string}>();if(found)return found.id;}
-  const customerId=id('cus');
-  await env.DB.prepare('INSERT INTO customers (id,tenant_id,name,phone) VALUES (?,?,?,?)').bind(customerId,tenantId,name||phone||'Contato',phone||null).run();
-  return customerId;
-}
-
-async function ensureChannel(env:Env,tenantId:string,type:string,name:string){
-  const found=await env.DB.prepare('SELECT id FROM channels WHERE tenant_id=? AND channel_type=? AND name=? LIMIT 1').bind(tenantId,type,name).first<{id:string}>();
-  if(found)return found.id;
-  const channelId=id('ch');
-  await env.DB.prepare("INSERT INTO channels (id,tenant_id,channel_type,name,status,config_json) VALUES (?,?,?,?, 'connected','{}')").bind(channelId,tenantId,type,name).run();
-  return channelId;
-}
-
+async function ensureCustomer(env:Env,tenantId:string,name:string,phone:string){if(phone){const f=await env.DB.prepare('SELECT id FROM customers WHERE tenant_id=? AND phone=? LIMIT 1').bind(tenantId,phone).first<{id:string}>();if(f)return f.id;}const customerId=id('cus');await env.DB.prepare('INSERT INTO customers (id,tenant_id,name,phone) VALUES (?,?,?,?)').bind(customerId,tenantId,name||phone||'Contato',phone||null).run();return customerId;}
+async function ensureChannel(env:Env,tenantId:string,type:string,name:string){const f=await env.DB.prepare('SELECT id FROM channels WHERE tenant_id=? AND channel_type=? AND name=? LIMIT 1').bind(tenantId,type,name).first<{id:string}>();if(f)return f.id;const channelId=id('ch');await env.DB.prepare("INSERT INTO channels (id,tenant_id,channel_type,name,status,config_json) VALUES (?,?,?,?, 'connected','{}')").bind(channelId,tenantId,type,name).run();return channelId;}
 async function inbound(request:Request,env:Env,tenantId:string,session:Session){
-  const input=await readBody(request);
-  const provider=clean(input.provider,40)||'evolution';
-  const externalEventId=clean(input.external_event_id,180);
-  const channelType=clean(input.channel_type,30)||'whatsapp';
-  const channelName=clean(input.channel_name,120)||'WhatsApp';
-  const externalConversationId=clean(input.external_conversation_id,220)||clean(input.phone,60);
-  const customerName=clean(input.customer_name,160)||'Contato';
-  const phone=clean(input.phone,60);
-  const contentType=['text','audio','image','document'].includes(clean(input.content_type,30))?clean(input.content_type,30):'text';
-  const body=clean(input.body,12000);
-  const transcript=clean(input.transcript,12000);
-  const fileKey=clean(input.file_key,600);
+  const input=await readBody(request);const provider=clean(input.provider,40)||'evolution';const externalEventId=clean(input.external_event_id,180);const channelType=clean(input.channel_type,30)||'whatsapp';const channelName=clean(input.channel_name,120)||'WhatsApp';const externalConversationId=clean(input.external_conversation_id,220)||clean(input.phone,60);const customerName=clean(input.customer_name,160)||'Contato';const phone=clean(input.phone,60);const rawType=clean(input.content_type,30);const contentType=['text','audio','image','document'].includes(rawType)?rawType:'text';const body=clean(input.body,12000);const transcript=clean(input.transcript,12000);const fileKey=clean(input.file_key,600);
   if(!externalEventId)return json({error:'external_event_id é obrigatório.'},400);
-  const duplicate=await env.DB.prepare('SELECT conversation_id,message_id FROM integration_events WHERE tenant_id=? AND provider=? AND external_event_id=? LIMIT 1').bind(tenantId,provider,externalEventId).first<{conversation_id:string;message_id:string}>();
-  if(duplicate)return json({data:{duplicate:true,conversation_id:duplicate.conversation_id,message_id:duplicate.message_id}});
-  const customerId=await ensureCustomer(env,tenantId,customerName,phone);
-  const channelId=await ensureChannel(env,tenantId,channelType,channelName);
-  let conversation=await env.DB.prepare('SELECT id FROM conversations WHERE tenant_id=? AND channel_id=? AND external_id=? LIMIT 1').bind(tenantId,channelId,externalConversationId).first<{id:string}>();
-  if(!conversation){const conversationId=id('conv');await env.DB.prepare("INSERT INTO conversations (id,tenant_id,customer_id,channel_id,external_id,status,last_message_at,context_json) VALUES (?,?,?,?,?,'ai',datetime('now'),'{}')").bind(conversationId,tenantId,customerId,channelId,externalConversationId).run();conversation={id:conversationId};}
-  const messageId=id('msg');
-  const effectiveBody=contentType==='audio'&&transcript?transcript:body;
-  const metadata={provider,external_event_id:externalEventId,transcript:transcript||null,analysis:input.analysis||null,mime_type:input.mime_type||null,file_name:input.file_name||null};
+  const duplicate=await env.DB.prepare('SELECT conversation_id,message_id FROM integration_events WHERE tenant_id=? AND provider=? AND external_event_id=? LIMIT 1').bind(tenantId,provider,externalEventId).first<{conversation_id:string;message_id:string}>();if(duplicate)return json({data:{duplicate:true,conversation_id:duplicate.conversation_id,message_id:duplicate.message_id}});
+  const customerId=await ensureCustomer(env,tenantId,customerName,phone);const channelId=await ensureChannel(env,tenantId,channelType,channelName);let conversation=await env.DB.prepare('SELECT id FROM conversations WHERE tenant_id=? AND channel_id=? AND external_id=? LIMIT 1').bind(tenantId,channelId,externalConversationId).first<{id:string}>();if(!conversation){const conversationId=id('conv');await env.DB.prepare("INSERT INTO conversations (id,tenant_id,customer_id,channel_id,external_id,status,last_message_at,context_json) VALUES (?,?,?,?,?,'ai',datetime('now'),'{}')").bind(conversationId,tenantId,customerId,channelId,externalConversationId).run();conversation={id:conversationId};}
+  const messageId=id('msg');const effectiveBody=contentType==='audio'&&transcript?transcript:body;const metadata={provider,external_event_id:externalEventId,transcript:transcript||null,analysis:input.analysis||null,mime_type:input.mime_type||null,file_name:input.file_name||null};
   await env.DB.batch([
     env.DB.prepare("INSERT INTO messages (id,conversation_id,direction,sender_type,content_type,body,file_key,metadata_json) VALUES (?,?,'inbound','customer',?,?,?,?)").bind(messageId,conversation.id,contentType,effectiveBody||null,fileKey||null,JSON.stringify(metadata)),
     env.DB.prepare("UPDATE conversations SET customer_id=?,status='ai',last_message_at=datetime('now') WHERE id=?").bind(customerId,conversation.id),
@@ -81,35 +34,13 @@ async function inbound(request:Request,env:Env,tenantId:string,session:Session){
   ]);
   return json({data:{duplicate:false,conversation_id:conversation.id,message_id:messageId,customer_id:customerId,channel_id:channelId,status:'ai'}},201);
 }
-
 async function outbound(request:Request,env:Env,tenantId:string,session:Session){
-  const input=await readBody(request);
-  const conversationId=clean(input.conversation_id,180);
-  const provider=clean(input.provider,40)||'evolution';
-  const destination=clean(input.destination,100);
-  const body=clean(input.body,12000);
-  const contentType=['text','audio','image','document'].includes(clean(input.content_type,30))?clean(input.content_type,30):'text';
-  const providerReference=clean(input.provider_reference,220);
-  if(!conversationId||!body)return json({error:'conversation_id e body são obrigatórios.'},400);
-  const conversation=await env.DB.prepare('SELECT id FROM conversations WHERE id=? AND tenant_id=? LIMIT 1').bind(conversationId,tenantId).first();
-  if(!conversation)return json({error:'Conversa não encontrada.'},404);
-  const messageId=id('msg');const externalEventId=providerReference||id('out');
+  const input=await readBody(request);const conversationId=clean(input.conversation_id,180);const provider=clean(input.provider,40)||'evolution';const destination=clean(input.destination,100);const body=clean(input.body,12000);const rawType=clean(input.content_type,30);const contentType=['text','audio','image','document'].includes(rawType)?rawType:'text';const providerReference=clean(input.provider_reference,220);if(!conversationId||!body)return json({error:'conversation_id e body são obrigatórios.'},400);const conversation=await env.DB.prepare('SELECT id FROM conversations WHERE id=? AND tenant_id=? LIMIT 1').bind(conversationId,tenantId).first();if(!conversation)return json({error:'Conversa não encontrada.'},404);const messageId=id('msg');const externalEventId=providerReference||id('out');
   await env.DB.batch([
     env.DB.prepare("INSERT INTO messages (id,conversation_id,direction,sender_type,content_type,body,metadata_json) VALUES (?,?,'outbound','ai',?,?,?)").bind(messageId,conversationId,contentType,body,JSON.stringify({provider,provider_reference:providerReference||null,actor:session.email||null})),
     env.DB.prepare("UPDATE conversations SET last_message_at=datetime('now') WHERE id=?").bind(conversationId),
     env.DB.prepare("INSERT INTO integration_events (id,tenant_id,provider,external_event_id,direction,channel_type,conversation_id,message_id,status,payload_json) VALUES (?,?,?,?,'outbound','whatsapp',?,?,'processed',?)").bind(id('ievt'),tenantId,provider,externalEventId,conversationId,messageId,JSON.stringify({destination})),
     env.DB.prepare("INSERT INTO integration_outbox (id,tenant_id,provider,channel_type,destination,content_type,body,status,provider_reference,metadata_json,sent_at) VALUES (?,?,?,'whatsapp',?,?,?,'sent',?,?,datetime('now'))").bind(id('outbox'),tenantId,provider,destination,contentType,body,providerReference||null,JSON.stringify({conversation_id:conversationId}))
-  ]);
-  return json({data:{message_id:messageId,conversation_id:conversationId,status:'logged'}},201);
+  ]);return json({data:{message_id:messageId,conversation_id:conversationId,status:'logged'}},201);
 }
-
-export default {async fetch(request:Request,env:Env):Promise<Response>{
-  try{
-    const url=new URL(request.url);
-    if(url.pathname!=='/api/integrations/inbound'&&url.pathname!=='/api/integrations/outbound')return app.fetch(request,env);
-    const auth=await sessionFor(request,env);if(auth.response)return auth.response;const session=auth.session||{};const tenantId=session.tenant_id||env.DEFAULT_TENANT_ID;if(!tenantId)return json({error:'Tenant indisponível.'},403);
-    if(request.method==='POST'&&url.pathname==='/api/integrations/inbound')return inbound(request,env,tenantId,session);
-    if(request.method==='POST'&&url.pathname==='/api/integrations/outbound')return outbound(request,env,tenantId,session);
-    return json({error:'Método não permitido.'},405);
-  }catch(error){if(error instanceof Response)return error;console.error('Multimodal HML gateway error',error);return json({error:'Falha no gateway multimodal.'},500);}
-}};
+export default {async fetch(request:Request,env:Env):Promise<Response>{try{const url=new URL(request.url);if(url.pathname!=='/api/integrations/inbound'&&url.pathname!=='/api/integrations/outbound')return app.fetch(request,env);const auth=await sessionFor(request,env);if(auth.response)return auth.response;const session=auth.session||{};const tenantId=session.tenant_id||env.DEFAULT_TENANT_ID;if(!tenantId)return json({error:'Tenant indisponível.'},403);if(request.method==='POST'&&url.pathname==='/api/integrations/inbound')return inbound(request,env,tenantId,session);if(request.method==='POST'&&url.pathname==='/api/integrations/outbound')return outbound(request,env,tenantId,session);return json({error:'Método não permitido.'},405);}catch(error){if(error instanceof HttpError)return json({error:error.message},error.status);console.error('Multimodal HML gateway error',error);return json({error:'Falha no gateway multimodal.'},500);}}};
