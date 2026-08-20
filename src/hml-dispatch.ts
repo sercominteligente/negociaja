@@ -1,2 +1,2 @@
-import health from './hml-health';
-export default health;
+import stable from './hml-stable';
+export default stable;
