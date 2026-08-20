@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "migration:check": "node scripts/migration-check.mjs",
     "security:check": "node scripts/security-check.mjs",
-    "js:check": "node --check public/app.js && node --check public/company-settings.js && node --check public/support.js && node --check public/signup.js && node --check public/team.js && node --check public/hml-lab.js && node --check public/tenant-experience.js && node --check public/documents.js && node --check public/license.js && node --check public/operations.js && node --check public/onboarding.js",
+    "js:check": "node --check public/app.js && node --check public/company-settings.js && node --check public/support.js && node --check public/signup.js && node --check public/team.js && node --check public/hml-lab.js && node --check public/tenant-experience.js && node --check public/documents.js && node --check public/license.js && node --check public/operations.js && node --check public/onboarding.js && node --check public/rbac-profiles.js",
     "db:local": "wrangler d1 migrations apply negocia-ja-bd --local",
     "db:remote": "wrangler d1 migrations apply negocia-ja-bd --remote",
     "db:remote:list": "wrangler d1 migrations list negocia-ja-bd --remote",
