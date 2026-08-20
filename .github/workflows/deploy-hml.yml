@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: negociaja-hml-deploy
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   CLOUDFLARE_ACCOUNT_ID: d750711fce41908fe354fa2e7284d6be
