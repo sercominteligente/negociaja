@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Minha Empresa • NegocIAJá!</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/company-settings.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/app" class="back">← Voltar ao painel</a>
+    <div><strong>Minha Empresa</strong><small>Identidade, catálogo e documentos</small></div>
+    <button class="save" id="saveAll" type="button">Salvar alterações</button>
+  </header>
+
+  <main class="workspace">
+    <aside class="tabs" aria-label="Seções">
+      <button class="active" data-tab="business">Empresa</button>
+      <button data-tab="branding">Aparência</button>
+      <button data-tab="catalog">Catálogo</button>
+      <button data-tab="documents">Documentos</button>
+      <button data-tab="portal">Portal</button>
+    </aside>
+
+    <section class="editor">
+      <div class="tab active" id="tab-business">
+        <span class="kicker">DADOS EMPRESARIAIS</span>
+        <h1>Informações da empresa</h1>
+        <p class="lead">Esses dados podem aparecer em pedidos, recibos, orçamentos e outros documentos comerciais.</p>
+        <div class="form-grid">
+          <label>Razão social<input id="legal_name" maxlength="180"></label>
+          <label>Nome fantasia<input id="trade_name" maxlength="180"></label>
+          <label>CNPJ/CPF<input id="document_number" maxlength="40"></label>
+          <label>Inscrição estadual<input id="state_registration" maxlength="60"></label>
+          <label>E-mail<input id="business_email" type="email" maxlength="254"></label>
+          <label>WhatsApp<input id="whatsapp" maxlength="40"></label>
+          <label>Site<input id="website" maxlength="240"></label>
+          <label>CEP<input id="postal_code" maxlength="20"></label>
+          <label class="wide">Endereço<input id="street" maxlength="180"></label>
+          <label>Número<input id="number" maxlength="30"></label>
+          <label>Bairro<input id="district" maxlength="120"></label>
+          <label>Cidade<input id="city" maxlength="120"></label>
+          <label>UF<input id="state" maxlength="40"></label>
+          <label class="wide">Instruções de pagamento<textarea id="payment_instructions" rows="3"></textarea></label>
+          <label class="wide">Termos e observações padrão<textarea id="terms_text" rows="5"></textarea></label>
+        </div>
+      </div>
+
+      <div class="tab" id="tab-branding">
+        <span class="kicker">WHITE LABEL</span>
+        <h1>Identidade visual</h1>
+        <p class="lead">Personalize a experiência do painel e os materiais comerciais da sua empresa.</p>
+        <div class="form-grid">
+          <label>Nome exibido<input id="company_display_name" maxlength="180"></label>
+          <label>Slogan<input id="slogan" maxlength="240"></label>
+          <label>Logo (chave/URL R2)<input id="logo_key" maxlength="500" placeholder="brands/minha-empresa/logo.png"></label>
+          <label>Favicon (chave/URL R2)<input id="favicon_key" maxlength="500"></label>
+          <label>Cor principal<input id="primary_color" type="color"></label>
+          <label>Cor secundária<input id="secondary_color" type="color"></label>
+          <label>Cor de destaque<input id="accent_color" type="color"></label>
+          <label>Cor de fundo<input id="background_color" type="color"></label>
+          <label>Cor de texto<input id="text_color" type="color"></label>
+          <label>Arredondamento<select id="border_radius"><option>8px</option><option>12px</option><option selected>14px</option><option>18px</option><option>24px</option></select></label>
+          <label class="wide">Rodapé<input id="footer_text" maxlength="500"></label>
+          <label class="check wide"><input id="show_negociaja_brand" type="checkbox" checked> Exibir “Powered by NegocIAJá!”</label>
+        </div>
+      </div>
+
+      <div class="tab" id="tab-catalog">
+        <span class="kicker">CATÁLOGO</span>
+        <h1>Apresentação do catálogo</h1>
+        <p class="lead">Cada empresa pode ter um catálogo com cara própria, sem compartilhar apresentação com outros tenants.</p>
+        <div class="form-grid">
+          <label>Título<input id="catalog_title" maxlength="180"></label>
+          <label>Layout<select id="catalog_layout"><option value="grid">Grade</option><option value="list">Lista</option><option value="compact">Compacto</option></select></label>
+          <label class="wide">Descrição<textarea id="catalog_description" rows="3"></textarea></label>
+          <label>Título do banner<input id="hero_title" maxlength="240"></label>
+          <label>Imagem do banner (R2)<input id="hero_image_key" maxlength="500"></label>
+          <label class="wide">Subtítulo do banner<textarea id="hero_subtitle" rows="2"></textarea></label>
+          <label>Estilo dos cards<select id="card_style"><option value="default">Padrão</option><option value="soft">Suave</option><option value="bordered">Contornado</option><option value="minimal">Minimalista</option></select></label>
+          <label>Domínio personalizado<input id="custom_domain" maxlength="240" placeholder="catalogo.suaempresa.com.br"></label>
+          <label class="check"><input id="show_prices" type="checkbox" checked> Exibir preços</label>
+          <label class="check"><input id="show_stock" type="checkbox"> Exibir estoque</label>
+          <label class="check"><input id="show_categories" type="checkbox" checked> Exibir categorias</label>
+        </div>
+      </div>
+
+      <div class="tab" id="tab-documents">
+        <span class="kicker">DOCUMENTOS</span>
+        <h1>Numeração e modelos</h1>
+        <p class="lead">Orçamentos, pedidos, recibos e faturas possuem numeração própria por empresa.</p>
+        <div id="numberingGrid" class="numbering-grid"></div>
+        <div class="template-note">
+          <strong>Modelos avançados</strong>
+          <p>Logo, cabeçalho, dados fiscais, assinatura, condições de pagamento e rodapé são armazenados por tenant. O PDF usa um snapshot para preservar o documento exatamente como foi emitido.</p>
+        </div>
+      </div>
+
+      <div class="tab" id="tab-portal">
+        <span class="kicker">PORTAL DA EMPRESA</span>
+        <h1>Experiência do usuário</h1>
+        <div class="form-grid">
+          <label class="wide">Título de boas-vindas<input id="dashboard_welcome_title" maxlength="180"></label>
+          <label class="wide">Texto de boas-vindas<textarea id="dashboard_welcome_text" rows="3"></textarea></label>
+          <label>Nome do suporte IA<input id="support_label" maxlength="80"></label>
+          <label>Fundo do login (R2)<input id="login_background_key" maxlength="500"></label>
+          <label class="wide">Mensagem do login<textarea id="login_message" rows="3"></textarea></label>
+        </div>
+      </div>
+    </section>
+
+    <aside class="preview">
+      <span class="preview-label">PREVIEW</span>
+      <article class="brand-preview" id="brandPreview">
+        <div class="preview-logo" id="previewLogo">SUA MARCA</div>
+        <h2 id="previewName">Sua empresa</h2>
+        <p id="previewSlogan">Seu slogan aparece aqui.</p>
+        <div class="preview-card"><strong>Pedido PED-00001</strong><span>Cliente Exemplo</span><b>R$ 129,90</b></div>
+        <button type="button">Ação principal</button>
+        <small id="previewFooter">Powered by NegocIAJá!</small>
+      </article>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/company-settings.js"></script>
+</body>
+</html>
