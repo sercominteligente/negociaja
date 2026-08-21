@@ -24,8 +24,9 @@
 - [x] dados empresariais, segmento, WhatsApp e cores no onboarding
 - [x] upload de logotipo para R2 com validação de tipo/tamanho
 - [x] identidade visual da empresa aplicada no painel (logo/nome/cores)
+- [x] gestão visual de usuários e papéis Admin/Operador
+- [x] convite seguro de equipe com definição de senha pelo convidado
 - [ ] personalização avançada de documentos e área de acesso
-- [ ] gestão visual de usuários e permissões
 - [ ] seletor operacional de tenant para Super Admin
 
 ## Fase 2 — Conversação
