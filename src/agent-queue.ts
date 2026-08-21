@@ -5,6 +5,7 @@
  */
 import {Env,makeId} from './lib';
 import {runConversationAgent} from './agent-runtime';
+import {preprocessInboundMessage} from './multimodal';
 
 export type AgentQueueJob={job_id:string;tenant_id:string;conversation_id:string;input_message_id:string};
 
@@ -27,6 +28,7 @@ export async function consumeAgentQueue(batch:MessageBatch<AgentQueueJob>,env:En
     if(!conv||conv.status!=='open'||conv.mode!=='ai'){await env.DB.prepare(`UPDATE agent_async_jobs SET status='skipped',last_error=?,completed_at=datetime('now'),updated_at=datetime('now') WHERE id=?`).bind(!conv?'conversation_not_found':`conversation_${conv.status}_${conv.mode}`,job.job_id).run();message.ack();continue;}
     const already=await env.DB.prepare(`SELECT id FROM agent_runs WHERE tenant_id=? AND conversation_id=? AND input_message_id=? AND status='completed' LIMIT 1`).bind(job.tenant_id,job.conversation_id,job.input_message_id).first();
     if(already){await env.DB.prepare(`UPDATE agent_async_jobs SET status='completed',completed_at=datetime('now'),updated_at=datetime('now') WHERE id=?`).bind(job.job_id).run();message.ack();continue;}
-    await runConversationAgent(env,job.tenant_id,job.conversation_id,job.input_message_id);await env.DB.prepare(`UPDATE agent_async_jobs SET status='completed',last_error=NULL,completed_at=datetime('now'),updated_at=datetime('now') WHERE id=?`).bind(job.job_id).run();message.ack();
+    const percept=await preprocessInboundMessage(env,job.tenant_id,job.input_message_id);await env.DB.prepare(`UPDATE agent_async_jobs SET last_error=NULL,updated_at=datetime('now') WHERE id=?`).bind(job.job_id).run();
+    await runConversationAgent(env,job.tenant_id,job.conversation_id,job.input_message_id);await env.DB.prepare(`UPDATE agent_async_jobs SET status='completed',last_error=NULL,completed_at=datetime('now'),updated_at=datetime('now') WHERE id=?`).bind(job.job_id).run();void percept;message.ack();
   }catch(error){const msg=error instanceof Error?error.message:String(error);await env.DB.prepare(`UPDATE agent_async_jobs SET status='retry',last_error=?,updated_at=datetime('now') WHERE id=?`).bind(msg,job.job_id).run();message.retry();}}
 }
