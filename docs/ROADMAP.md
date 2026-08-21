@@ -22,8 +22,9 @@
 - [x] fila de notificação de e-mail com envio via Resend quando configurado
 - [x] onboarding base da empresa
 - [x] dados empresariais, segmento, WhatsApp e cores no onboarding
-- [ ] upload de logotipo e arquivos de branding para R2
-- [ ] personalização completa por empresa
+- [x] upload de logotipo para R2 com validação de tipo/tamanho
+- [x] identidade visual da empresa aplicada no painel (logo/nome/cores)
+- [ ] personalização avançada de documentos e área de acesso
 - [ ] gestão visual de usuários e permissões
 - [ ] seletor operacional de tenant para Super Admin
 
