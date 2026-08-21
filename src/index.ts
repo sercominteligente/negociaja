@@ -10,6 +10,8 @@ import {handleOnboarding} from './onboarding';
 import {handleBranding} from './branding';
 import {handleTeam} from './team';
 import {handlePlatform} from './platform';
+import {handleBilling} from './billing';
+import {handleOperations} from './operations';
 import {handleConversations} from './conversations';
 import {handleEvolution} from './evolution';
 import {handleEvolutionInbound} from './evolution-webhook';
@@ -26,13 +28,15 @@ import {guardRequest,secureResponse} from './security';
 const DIRECT_PRIVATE:Record<string,string>={
   '/app.html':'/app','/team.html':'/equipe','/super-admin.html':'/super-admin',
   '/onboarding.html':'/onboarding','/channel-whatsapp.html':'/canal-whatsapp',
-  '/agent-actions.html':'/acoes-ia','/inbox.html':'/inbox'
+  '/agent-actions.html':'/acoes-ia','/inbox.html':'/inbox','/plan.html':'/plano',
+  '/operations.html':'/operacoes'
 };
 
 async function route(request:Request,env:Env,url:URL):Promise<Response>{
   const direct=DIRECT_PRIVATE[url.pathname];
   if(direct)return Response.redirect(new URL(direct,url.origin).toString(),302);
 
+  const billingResponse=await handleBilling(request,env,url);if(billingResponse)return billingResponse;
   const inbound=await handleEvolutionInbound(request,env,url);if(inbound)return inbound;
   const webchatResponse=await handleWebchat(request,env,url);if(webchatResponse)return webchatResponse;
   const evolutionResponse=await handleEvolution(request,env,url);if(evolutionResponse)return evolutionResponse;
@@ -41,6 +45,7 @@ async function route(request:Request,env:Env,url:URL):Promise<Response>{
   const agentRuntimeResponse=await handleAgentRuntime(request,env,url);if(agentRuntimeResponse)return agentRuntimeResponse;
   const approvalResponse=await handleAgentApproval(request,env,url);if(approvalResponse)return approvalResponse;
   const agentToolsResponse=await handleAgentTools(request,env,url);if(agentToolsResponse)return agentToolsResponse;
+  const operationsResponse=await handleOperations(request,env,url);if(operationsResponse)return operationsResponse;
   const conversationResponse=await handleConversations(request,env,url);if(conversationResponse)return conversationResponse;
   const platformResponse=await handlePlatform(request,env,url);if(platformResponse)return platformResponse;
   const teamResponse=await handleTeam(request,env,url);if(teamResponse)return teamResponse;
@@ -62,6 +67,8 @@ async function route(request:Request,env:Env,url:URL):Promise<Response>{
   if(url.pathname==='/canal-whatsapp'||url.pathname==='/canal-whatsapp/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role!=='admin'&&actor.role!=='super_admin')return Response.redirect(new URL('/app',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/channel-whatsapp.html',url.origin),request));}
   if(url.pathname==='/acoes-ia'||url.pathname==='/acoes-ia/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/agent-actions.html',url.origin),request));}
   if(url.pathname==='/inbox'||url.pathname==='/inbox/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/inbox.html',url.origin),request));}
+  if(url.pathname==='/plano'||url.pathname==='/plano/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/plan.html',url.origin),request));}
+  if(url.pathname==='/operacoes'||url.pathname==='/operacoes/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role!=='super_admin')return Response.redirect(new URL('/app',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/operations.html',url.origin),request));}
   if(url.pathname==='/app'||url.pathname==='/app/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/app.html',url.origin),request));}
   return env.ASSETS.fetch(request);
 }
