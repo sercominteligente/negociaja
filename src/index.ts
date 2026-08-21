@@ -15,9 +15,11 @@ import {handleMultimodal} from './multimodal';
 import {handleWebchat} from './webchat';
 import {handleAgentTools} from './agent-tools';
 import {handleAgentRuntime} from './agent-runtime';
+import {consumeAgentQueue,AgentQueueJob} from './agent-queue';
 import {authenticate,Env,json} from './lib';
 
-export default {async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request.url);try{
+export default {
+async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request.url);try{
   const webchatResponse=await handleWebchat(request,env,url);if(webchatResponse)return webchatResponse;
   const evolutionResponse=await handleEvolution(request,env,url);if(evolutionResponse)return evolutionResponse;
   const multimodalResponse=await handleMultimodal(request,env,url);if(multimodalResponse)return multimodalResponse;
@@ -43,4 +45,6 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{const url
   if(url.pathname==='/inbox'||url.pathname==='/inbox/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/inbox.html',url.origin),request));}
   if(url.pathname==='/app'||url.pathname==='/app/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/app.html',url.origin),request));}
   return env.ASSETS.fetch(request);
-}catch(error){console.error('NegocIAJá error',error);return url.pathname.startsWith('/api/')||url.pathname.startsWith('/webhooks/')?json({error:'Erro interno.',requestId:crypto.randomUUID()},500):new Response('NegocIAJá temporariamente indisponível.',{status:500});}}};
+}catch(error){console.error('NegocIAJá error',error);return url.pathname.startsWith('/api/')||url.pathname.startsWith('/webhooks/')?json({error:'Erro interno.',requestId:crypto.randomUUID()},500):new Response('NegocIAJá temporariamente indisponível.',{status:500});}},
+async queue(batch:MessageBatch<AgentQueueJob>,env:Env):Promise<void>{await consumeAgentQueue(batch,env);}
+};
