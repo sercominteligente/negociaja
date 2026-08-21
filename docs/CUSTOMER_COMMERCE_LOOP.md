@@ -11,9 +11,9 @@ O Customer Commerce Loop é o ciclo universal da experiência do comprador. O co
 3. **Comprar/contratar** — carrinho converte para o mesmo `order-service` usado por painel e IA.
 4. **Acompanhar** — pedido segue `workflow_templates`/`workflow_steps`, configuráveis por empresa.
 5. **Repetir** — pedidos vinculados à sessão podem reconstruir o carrinho com preços/estoque atuais no checkout.
-6. **Reconquistar** — etapa futura usa abandono, recorrência e comportamento com consentimento e limites de frequência.
+6. **Reconquistar** — abandono, recorrência e comportamento podem alimentar automações do próprio NegocIAJá!, sempre com consentimento e limites de frequência.
 
-## O que está nesta primeira entrega
+## O que está nesta entrega
 
 - rota pública `/loja/:tenant_slug`;
 - branding e ativação da vitrine por tenant;
@@ -23,20 +23,23 @@ O Customer Commerce Loop é o ciclo universal da experiência do comprador. O co
 - validação de estoque antes e durante a criação do pedido;
 - checkout para o `order-service` auditado;
 - histórico de pedidos da própria sessão;
+- timeline pública protegida dos eventos do pedido;
 - repetir pedido sem acessar pedidos de outra sessão;
+- eventos de jornada para métricas, recuperação e retenção;
+- base de identidade para recuperação segura entre dispositivos;
 - personalização de login por empresa;
 - landing institucional com mídia gerenciada pelo Super Admin.
 
 ## Próximas camadas do Loop
 
-- timeline pública detalhada dos eventos do workflow;
 - magic link/OTP para histórico em outro dispositivo;
 - notificações automáticas de mudança de etapa;
 - recuperação de carrinho abandonado;
 - favoritos/listas de recompra;
 - cupons, fidelidade e benefícios;
 - avaliações e pós-venda;
-- públicos comportamentais para integração futura com AnuncIAJá.
+- segmentação comportamental e campanhas internas do próprio NegocIAJá!;
+- métricas de conversão, recompra, abandono e retenção por tenant.
 
 ## Regra arquitetural
 
