@@ -1,0 +1,2 @@
+NegocIAJá! — SER Comunicação — CNPJ 23.296.513/0001-97
+Guard rail: public logo endpoints must never return HTTP 500.
