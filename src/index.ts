@@ -1,11 +1,19 @@
+/*
+ * NegocIAJá! — desenvolvido pela SER Comunicação
+ * CNPJ 23.296.513/0001-97
+ * Todos os direitos reservados.
+ */
 import {handleApi} from './api';
 import {handleOnboarding} from './onboarding';
+import {handleBranding} from './branding';
 import {authenticate,Env,json} from './lib';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     try {
+      const brandingResponse = await handleBranding(request, env, url);
+      if (brandingResponse) return brandingResponse;
       const onboardingResponse = await handleOnboarding(request, env, url);
       if (onboardingResponse) return onboardingResponse;
       const apiResponse = await handleApi(request, env, url);
