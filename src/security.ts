@@ -1,0 +1,32 @@
+/*
+ * NegocIAJá! — desenvolvido pela SER Comunicação
+ * CNPJ 23.296.513/0001-97
+ * Todos os direitos reservados.
+ */
+import {json} from './lib';
+
+const MUTATIONS=new Set(['POST','PUT','PATCH','DELETE']);
+const PRIVATE_PATHS=new Set(['/app','/app/','/equipe','/equipe/','/super-admin','/super-admin/','/onboarding','/onboarding/','/canal-whatsapp','/canal-whatsapp/','/acoes-ia','/acoes-ia/','/inbox','/inbox/']);
+
+export function guardRequest(request:Request,url:URL):Response|null{
+  if(!MUTATIONS.has(request.method.toUpperCase()))return null;
+  if(url.pathname.startsWith('/webhooks/'))return null;
+  const origin=request.headers.get('origin');
+  if(origin&&origin!==url.origin)return json({error:'Origem não autorizada.'},403);
+  const length=Number(request.headers.get('content-length')||0);
+  const limit=url.pathname==='/api/branding/logo'?2*1024*1024:1024*1024;
+  if(length>limit)return json({error:'Payload excede o limite permitido.'},413);
+  return null;
+}
+
+export function secureResponse(response:Response,url:URL):Response{
+  const headers=new Headers(response.headers);
+  headers.set('x-content-type-options','nosniff');
+  headers.set('x-frame-options','DENY');
+  headers.set('referrer-policy','strict-origin-when-cross-origin');
+  headers.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');
+  headers.set('content-security-policy',"default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'");
+  if(url.protocol==='https:')headers.set('strict-transport-security','max-age=31536000; includeSubDomains');
+  if(PRIVATE_PATHS.has(url.pathname)||url.pathname.startsWith('/api/'))headers.set('cache-control','no-store');
+  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+}
