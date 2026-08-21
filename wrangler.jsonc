@@ -1,15 +1,46 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "negociaja",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-19",
-  "observability": { "enabled": true },
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
-  }
-  // Bindings já conectados no painel Cloudflare:
-  // D1: DB -> negocia-ja-bd
-  // R2: FILES -> negocia-ja-files
+    "html_handling": "none",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "negocia-ja-bd",
+      "database_id": "25ad2242-5226-467d-9f69-bbdd244fb2ca",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "negocia-ja-files"
+    }
+  ],
+  "routes": [
+    { "pattern": "negociaja.com.br", "custom_domain": true },
+    { "pattern": "www.negociaja.com.br", "custom_domain": true },
+    { "pattern": "app.negociaja.com.br", "custom_domain": true }
+  ]
+
+  // AGENT_QUEUE será adicionado somente após a Queue/DLQ serem criadas no
+  // ambiente desejado. PUBLIC_APP_URL deve ser configurado por ambiente.
+  // Secrets nunca devem ser versionados neste arquivo.
 }

@@ -5,14 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "node scripts/assert-production-deploy.mjs",
+    "deploy:dry": "wrangler deploy --dry-run --outdir .wrangler-dry-run",
     "typecheck": "tsc --noEmit",
     "db:local": "wrangler d1 migrations apply negocia-ja-bd --local",
-    "db:remote": "wrangler d1 migrations apply negocia-ja-bd --remote"
+    "db:remote": "wrangler d1 migrations apply negocia-ja-bd --remote",
+    "audit:worker": "node scripts/check-single-worker.mjs"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260815.1",
+    "@cloudflare/workers-types": "4.20260702.1",
     "typescript": "^5.9.2",
-    "wrangler": "^4.31.0"
+    "wrangler": "4.31.0"
   }
 }
