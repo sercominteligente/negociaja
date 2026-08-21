@@ -30,13 +30,13 @@
 - [x] personalização avançada de documentos e área de acesso
 
 ## Fase 2 — Conversação
-- [ ] Conversation Hub
+- [x] Conversation Hub — núcleo de conversas, mensagens e eventos
 - [ ] WhatsApp/Evolution
 - [ ] webchat
 - [ ] texto, áudio e imagem
 - [ ] transcrição de áudio
 - [ ] análise de imagem
-- [ ] human takeover
+- [x] human takeover — fundação API take/release/assignment
 - [ ] Agent Tool Gateway
 
 ## Fase 3 — Venda completa
