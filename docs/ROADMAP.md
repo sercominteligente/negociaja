@@ -6,10 +6,14 @@
 - [x] workflow base
 - [x] automações base
 - [x] núcleo de API
-- [ ] landing comercial
-- [ ] painel HML
-- [ ] CRUD visual de catálogo
-- [ ] criação de pedido pelo painel
+- [x] landing comercial
+- [x] painel HML
+- [x] CRUD visual de catálogo
+- [x] criação de pedido pelo painel
+- [x] avanço manual de pedido pelo workflow no painel
+- [ ] autenticação e sessão reais
+- [ ] isolamento de tenant sem confiar em header enviado pelo cliente
+- [ ] perfis Super Admin, Admin e Operador com RBAC
 
 ## Fase 2 — Conversação
 - [ ] Conversation Hub
