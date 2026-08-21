@@ -11,10 +11,14 @@ import {handlePlatform} from './platform';
 import {handleConversations} from './conversations';
 import {handleEvolution} from './evolution';
 import {handleConversationMedia} from './conversation-media';
+import {handleMultimodal} from './multimodal';
+import {handleWebchat} from './webchat';
 import {authenticate,Env,json} from './lib';
 
 export default {async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request.url);try{
+  const webchatResponse=await handleWebchat(request,env,url);if(webchatResponse)return webchatResponse;
   const evolutionResponse=await handleEvolution(request,env,url);if(evolutionResponse)return evolutionResponse;
+  const multimodalResponse=await handleMultimodal(request,env,url);if(multimodalResponse)return multimodalResponse;
   const mediaResponse=await handleConversationMedia(request,env,url);if(mediaResponse)return mediaResponse;
   const conversationResponse=await handleConversations(request,env,url);if(conversationResponse)return conversationResponse;
   const platformResponse=await handlePlatform(request,env,url);if(platformResponse)return platformResponse;
@@ -22,6 +26,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{const url
   const brandingResponse=await handleBranding(request,env,url);if(brandingResponse)return brandingResponse;
   const onboardingResponse=await handleOnboarding(request,env,url);if(onboardingResponse)return onboardingResponse;
   const apiResponse=await handleApi(request,env,url);if(apiResponse)return apiResponse;
+  const chatMatch=url.pathname.match(/^\/chat\/([^/]+)\/?$/);if(chatMatch)return env.ASSETS.fetch(new Request(new URL(`/webchat.html?tenant=${encodeURIComponent(chatMatch[1])}`,url.origin),request));
   if(url.pathname==='/login'||url.pathname==='/login/'){const actor=await authenticate(request,env);if(actor)return Response.redirect(new URL(actor.role==='super_admin'?'/super-admin':'/app',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/login.html',url.origin),request));}
   if(url.pathname==='/cadastro'||url.pathname==='/cadastro/')return env.ASSETS.fetch(new Request(new URL('/signup.html',url.origin),request));
   if(url.pathname==='/confirmar-email'||url.pathname==='/confirmar-email/')return env.ASSETS.fetch(new Request(new URL('/verify-email.html',url.origin),request));
