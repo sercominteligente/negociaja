@@ -20,6 +20,21 @@ CREATE TABLE IF NOT EXISTS commerce_feedback (
 );
 CREATE INDEX IF NOT EXISTS idx_commerce_feedback_tenant ON commerce_feedback(tenant_id,created_at DESC);
 
+CREATE TABLE IF NOT EXISTS commerce_feedback_tokens (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  order_id TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL,
+  consumed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+  FOREIGN KEY (session_id) REFERENCES commerce_sessions(id) ON DELETE CASCADE,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_tokens_order ON commerce_feedback_tokens(tenant_id,order_id,created_at DESC);
+
 UPDATE workflow_steps
 SET is_terminal=1, post_sale_eligible=1
 WHERE id IN (
