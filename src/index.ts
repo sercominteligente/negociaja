@@ -5,6 +5,7 @@
  */
 import {handleApi} from './api';
 import {handleCoreDashboard} from './core-dashboard';
+import {handleCoreOrders} from './core-orders';
 import {handleOnboarding} from './onboarding';
 import {handleBranding} from './branding';
 import {handleTeam} from './team';
@@ -46,6 +47,7 @@ async function route(request:Request,env:Env,url:URL):Promise<Response>{
   const brandingResponse=await handleBranding(request,env,url);if(brandingResponse)return brandingResponse;
   const onboardingResponse=await handleOnboarding(request,env,url);if(onboardingResponse)return onboardingResponse;
   const dashboardResponse=await handleCoreDashboard(request,env,url);if(dashboardResponse)return dashboardResponse;
+  const orderResponse=await handleCoreOrders(request,env,url);if(orderResponse)return orderResponse;
   const apiResponse=await handleApi(request,env,url);if(apiResponse)return apiResponse;
 
   const chatMatch=url.pathname.match(/^\/chat\/([^/]+)\/?$/);
