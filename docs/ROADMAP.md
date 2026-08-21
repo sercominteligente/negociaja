@@ -27,7 +27,7 @@
 - [x] gestão visual de usuários e papéis Admin/Operador
 - [x] convite seguro de equipe com definição de senha pelo convidado
 - [x] seletor de tenant do Super Admin gravado na sessão do servidor
-- [ ] personalização avançada de documentos e área de acesso
+- [x] personalização avançada de documentos e área de acesso
 
 ## Fase 2 — Conversação
 - [ ] Conversation Hub
