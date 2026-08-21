@@ -14,3 +14,9 @@ Plataforma SaaS independente para atendimento conversacional, catálogo adaptáv
 ## Status
 
 Bootstrap inicial do projeto em andamento.
+
+## Titularidade
+
+© 2026 **SER Comunicação** — CNPJ **23.296.513/0001-97**. Todos os direitos reservados.
+
+Consulte [`COPYRIGHT.md`](COPYRIGHT.md) para o aviso completo de titularidade e uso do código-fonte.
