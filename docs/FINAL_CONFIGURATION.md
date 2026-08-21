@@ -81,7 +81,9 @@ Antes do go-live, validar em um tenant fictício:
 - preferências de comunicação editáveis;
 - recuperação de carrinho somente com consentimento;
 - atualização automática de status;
-- pós-venda com link de avaliação de uso único;
+- pós-venda automático apenas em etapa marcada como elegível;
+- link de avaliação com token hash, expiração e consumo único;
+- avaliação de 1 a 5 + comentário opcional;
 - recompra/repetição de pedido;
 - Commerce Insights com conversão, abandono, recompra e satisfação.
 
@@ -97,10 +99,11 @@ Antes do go-live, validar em um tenant fictício:
 8. IA criando ação e aguardando aprovação humana quando a política exigir.
 9. Pedido baixando estoque uma única vez.
 10. Assinatura de teste ativando e cancelando corretamente.
-11. Customer Commerce Loop validado ponta a ponta.
+11. Customer Commerce Loop validado ponta a ponta, incluindo avaliação pós-venda.
 12. Logotipo original e mídia institucional conferidos em desktop/mobile.
-13. Backup/export D1 realizado antes do primeiro deploy de produção.
-14. Plano de rollback: manter SHA/tag do último release estável e migrations aditivas/reversíveis sempre que possível.
+13. Celular demonstrativo da landing carregado pelo Super Admin e conferido em desktop/mobile.
+14. Backup/export D1 realizado antes do primeiro deploy de produção.
+15. Plano de rollback: manter SHA/tag do último release estável e migrations aditivas/reversíveis sempre que possível.
 
 ## 9. Telas de verificação
 
