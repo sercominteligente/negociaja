@@ -1,1 +1,6 @@
+/*
+ * NegocIAJá! — Sistema desenvolvido por SER Comunicação.
+ * © 2026 SER Comunicação — CNPJ 23.296.513/0001-97. Todos os direitos reservados.
+ * Reprodução, distribuição ou uso não autorizado deste código é proibido.
+ */
 const form=document.querySelector('#signupForm');const status=document.querySelector('#signupStatus');form?.addEventListener('submit',async e=>{e.preventDefault();status.textContent='Criando sua conta…';const f=new FormData(form);const payload=Object.fromEntries(f.entries());try{const r=await fetch('/api/auth/signup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Não foi possível criar sua conta.');status.innerHTML=`Conta criada. Enviamos a confirmação para <strong>${j.data.email}</strong>. Verifique sua caixa de entrada${j.data.email_sent?'':' (em homologação, o envio pode permanecer na fila até o provider de e-mail ser configurado)'}.`;form.reset();}catch(err){status.textContent=err.message||'Erro ao cadastrar.';}});
