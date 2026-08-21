@@ -4,6 +4,7 @@
  * Todos os direitos reservados.
  */
 import {handleApi} from './api';
+import {handleCoreDashboard} from './core-dashboard';
 import {handleOnboarding} from './onboarding';
 import {handleBranding} from './branding';
 import {handleTeam} from './team';
@@ -42,6 +43,7 @@ async function route(request:Request,env:Env,url:URL):Promise<Response>{
   const teamResponse=await handleTeam(request,env,url);if(teamResponse)return teamResponse;
   const brandingResponse=await handleBranding(request,env,url);if(brandingResponse)return brandingResponse;
   const onboardingResponse=await handleOnboarding(request,env,url);if(onboardingResponse)return onboardingResponse;
+  const dashboardResponse=await handleCoreDashboard(request,env,url);if(dashboardResponse)return dashboardResponse;
   const apiResponse=await handleApi(request,env,url);if(apiResponse)return apiResponse;
 
   const chatMatch=url.pathname.match(/^\/chat\/([^/]+)\/?$/);
