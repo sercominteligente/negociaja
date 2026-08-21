@@ -10,6 +10,9 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
@@ -38,5 +41,6 @@
   ]
 
   // AGENT_QUEUE será adicionado somente após a Queue/DLQ serem criadas no
-  // ambiente desejado. Secrets nunca devem ser versionados neste arquivo.
+  // ambiente desejado. PUBLIC_APP_URL deve ser configurado por ambiente.
+  // Secrets nunca devem ser versionados neste arquivo.
 }
