@@ -26,8 +26,8 @@
 - [x] identidade visual da empresa aplicada no painel (logo/nome/cores)
 - [x] gestão visual de usuários e papéis Admin/Operador
 - [x] convite seguro de equipe com definição de senha pelo convidado
+- [x] seletor de tenant do Super Admin gravado na sessão do servidor
 - [ ] personalização avançada de documentos e área de acesso
-- [ ] seletor operacional de tenant para Super Admin
 
 ## Fase 2 — Conversação
 - [ ] Conversation Hub
