@@ -5,7 +5,7 @@
  */
 export type Dict = Record<string, unknown>;
 export type Role = 'super_admin' | 'admin' | 'operator';
-export interface Env { DB: D1Database; FILES: R2Bucket; ASSETS: Fetcher; HML_BOOTSTRAP_TOKEN?: string; RESEND_API_KEY?: string; EMAIL_FROM?: string; CREDENTIALS_KEY?: string; OPENAI_API_KEY?: string; OPENAI_TRANSCRIBE_MODEL?: string; OPENAI_VISION_MODEL?: string; }
+export interface Env { DB: D1Database; FILES: R2Bucket; ASSETS: Fetcher; HML_BOOTSTRAP_TOKEN?: string; RESEND_API_KEY?: string; EMAIL_FROM?: string; CREDENTIALS_KEY?: string; OPENAI_API_KEY?: string; OPENAI_TRANSCRIBE_MODEL?: string; OPENAI_VISION_MODEL?: string; OPENAI_AGENT_MODEL?: string; }
 export type Actor = { sessionId:string; actorId:string; actorType:'platform_user'|'tenant_user'; role:Role; tenantId:string|null; name:string; email:string; };
 export const SESSION_COOKIE='negociaja_session';
 export const SESSION_TTL_SECONDS=60*60*12;
