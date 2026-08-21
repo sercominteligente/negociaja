@@ -11,9 +11,16 @@
 - [x] CRUD visual de catálogo
 - [x] criação de pedido pelo painel
 - [x] avanço manual de pedido pelo workflow no painel
-- [ ] autenticação e sessão reais
-- [ ] isolamento de tenant sem confiar em header enviado pelo cliente
-- [ ] perfis Super Admin, Admin e Operador com RBAC
+- [x] autenticação e sessão reais
+- [x] isolamento de tenant sem confiar em header enviado por usuário comum
+- [x] perfis Super Admin, Admin e Operador com RBAC base
+- [x] audit log de ações sensíveis
+- [x] CI de typecheck para pull requests
+- [ ] confirmação real de e-mail
+- [ ] onboarding da empresa
+- [ ] personalização por empresa (logo, cores e dados)
+- [ ] gestão visual de usuários e permissões
+- [ ] seletor operacional de tenant para Super Admin
 
 ## Fase 2 — Conversação
 - [ ] Conversation Hub
