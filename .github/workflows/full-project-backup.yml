@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - backup/2026-08-20-full-project
+  pull_request:
+    branches:
+      - hml
   workflow_dispatch:
 
 permissions:
