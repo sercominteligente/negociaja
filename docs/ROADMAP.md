@@ -16,7 +16,10 @@
 - [x] perfis Super Admin, Admin e Operador com RBAC base
 - [x] audit log de ações sensíveis
 - [x] CI de typecheck para pull requests
-- [ ] confirmação real de e-mail
+- [x] cadastro público com tenant/admin em pending_email
+- [x] confirmação real de e-mail com token armazenado somente como hash
+- [x] ativação automática de trial após confirmação
+- [x] fila de notificação de e-mail com envio via Resend quando configurado
 - [ ] onboarding da empresa
 - [ ] personalização por empresa (logo, cores e dados)
 - [ ] gestão visual de usuários e permissões
