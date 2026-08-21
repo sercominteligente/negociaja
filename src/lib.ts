@@ -5,7 +5,7 @@
  */
 export type Dict = Record<string, unknown>;
 export type Role = 'super_admin' | 'admin' | 'operator';
-export interface Env { DB: D1Database; FILES: R2Bucket; ASSETS: Fetcher; HML_BOOTSTRAP_TOKEN?: string; RESEND_API_KEY?: string; EMAIL_FROM?: string; }
+export interface Env { DB: D1Database; FILES: R2Bucket; ASSETS: Fetcher; HML_BOOTSTRAP_TOKEN?: string; RESEND_API_KEY?: string; EMAIL_FROM?: string; CREDENTIALS_KEY?: string; }
 export type Actor = { sessionId:string; actorId:string; actorType:'platform_user'|'tenant_user'; role:Role; tenantId:string|null; name:string; email:string; };
 export const SESSION_COOKIE='negociaja_session';
 export const SESSION_TTL_SECONDS=60*60*12;
@@ -16,8 +16,8 @@ export const makeId=(prefix:string)=>`${prefix}_${crypto.randomUUID()}`;
 export async function body(request:Request):Promise<Dict>{try{return await request.json() as Dict;}catch{return {};}}
 export const cents=(value:unknown)=>{const n=Number(value??0);return Number.isFinite(n)?Math.max(0,Math.round(n)):0;};
 const toHex=(buffer:ArrayBuffer)=>[...new Uint8Array(buffer)].map(b=>b.toString(16).padStart(2,'0')).join('');
-const bytesToBase64=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes));
-const base64ToBytes=(value:string)=>Uint8Array.from(atob(value),c=>c.charCodeAt(0));
+export const bytesToBase64=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes));
+export const base64ToBytes=(value:string)=>Uint8Array.from(atob(value),c=>c.charCodeAt(0));
 export async function sha256(value:string){return toHex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)));}
 export async function derivePassword(password:string,saltBase64:string,iterations=PASSWORD_ITERATIONS){const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:base64ToBytes(saltBase64),iterations,hash:'SHA-256'},material,256);return bytesToBase64(new Uint8Array(bits));}
 export async function createPassword(password:string){const salt=crypto.getRandomValues(new Uint8Array(16));const saltBase64=bytesToBase64(salt);return{salt:saltBase64,hash:await derivePassword(password,saltBase64),iterations:PASSWORD_ITERATIONS};}
