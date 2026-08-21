@@ -1,3 +1,8 @@
+/*
+ * NegocIAJá! — desenvolvido pela SER Comunicação
+ * CNPJ 23.296.513/0001-97
+ * Todos os direitos reservados.
+ */
 export type Dict = Record<string, unknown>;
 export type Role = 'super_admin' | 'admin' | 'operator';
 export interface Env { DB: D1Database; FILES: R2Bucket; ASSETS: Fetcher; HML_BOOTSTRAP_TOKEN?: string; RESEND_API_KEY?: string; EMAIL_FROM?: string; }
@@ -23,4 +28,4 @@ export function slugify(value:string){return value.normalize('NFD').replace(/[\u
 export async function audit(env:Env,actor:Actor|null,tenantId:string|null,action:string,entityType?:string,entityId?:string,metadata:Dict={}){await env.DB.prepare(`INSERT INTO audit_logs (id,tenant_id,actor_type,actor_id,actor_role,action,entity_type,entity_id,metadata_json) VALUES (?,?,?,?,?,?,?,?,?)`).bind(makeId('audit'),tenantId,actor?.actorType||'system',actor?.actorId||null,actor?.role||null,action,entityType||null,entityId||null,JSON.stringify(metadata)).run();}
 export async function authenticate(request:Request,env:Env):Promise<Actor|null>{const token=cookieValue(request,SESSION_COOKIE);if(!token)return null;const tokenHash=await sha256(token);const row=await env.DB.prepare(`SELECT s.id session_id,s.user_id,s.platform_user_id,s.tenant_id,s.role,u.name user_name,u.email user_email,u.status user_status,p.name platform_name,p.email platform_email,p.status platform_status FROM auth_sessions s LEFT JOIN users u ON u.id=s.user_id LEFT JOIN platform_users p ON p.id=s.platform_user_id WHERE s.token_hash=? AND s.revoked_at IS NULL AND datetime(s.expires_at)>datetime('now') LIMIT 1`).bind(tokenHash).first<{session_id:string;user_id:string|null;platform_user_id:string|null;tenant_id:string|null;role:Role;user_name:string|null;user_email:string|null;user_status:string|null;platform_name:string|null;platform_email:string|null;platform_status:string|null;}>();if(!row)return null;if(row.user_id&&row.user_status!=='active')return null;if(row.platform_user_id&&row.platform_status!=='active')return null;await env.DB.prepare("UPDATE auth_sessions SET last_seen_at=datetime('now') WHERE id=?").bind(row.session_id).run();return{sessionId:row.session_id,actorId:row.user_id||row.platform_user_id||'',actorType:row.user_id?'tenant_user':'platform_user',role:row.role,tenantId:row.tenant_id,name:row.user_name||row.platform_name||'Usuário',email:row.user_email||row.platform_email||''};}
 export const hasRole=(actor:Actor,allowed:Role[])=>allowed.includes(actor.role);
-export async function resolveTenant(request:Request,env:Env,actor:Actor){if(actor.role!=='super_admin')return actor.tenantId;const requested=request.headers.get('x-tenant-id')||new URL(request.url).searchParams.get('tenant_id');if(!requested)return null;const exists=await env.DB.prepare('SELECT id FROM tenants WHERE id=? LIMIT 1').bind(requested).first<{id:string}>();return exists?.id||null;}
+export async function resolveTenant(_request:Request,_env:Env,actor:Actor){return actor.tenantId;}
