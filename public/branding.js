@@ -1,0 +1,6 @@
+/*
+ * NegocIAJá! — desenvolvido pela SER Comunicação
+ * CNPJ 23.296.513/0001-97
+ * Todos os direitos reservados.
+ */
+(async()=>{try{const r=await fetch('/api/branding');const j=await r.json();if(!r.ok)return;const b=j.data||{};if(/^#[0-9a-fA-F]{6}$/.test(b.primary_color||''))document.documentElement.style.setProperty('--blue',b.primary_color);if(/^#[0-9a-fA-F]{6}$/.test(b.secondary_color||'')){document.documentElement.style.setProperty('--navy',b.secondary_color);document.documentElement.style.setProperty('--navy2',b.secondary_color);}const brand=document.querySelector('.dash-top .brand-word');if(brand){brand.title=b.public_name||'NegocIAJá!';if(b.logo_url){const img=document.createElement('img');img.src=`${b.logo_url}?v=${Date.now()}`;img.alt=b.public_name||'Logotipo da empresa';img.style.cssText='max-width:150px;max-height:42px;object-fit:contain;display:block';brand.replaceChildren(img);}else if(b.public_name){brand.textContent=b.public_name;brand.style.letterSpacing='-.5px';brand.style.fontSize='20px';}}}catch{}})();
