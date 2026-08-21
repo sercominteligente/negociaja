@@ -54,11 +54,12 @@ export async function createOrder(env:Env,tenantId:string,args:Dict,actor:{type:
     env.DB.prepare(`INSERT INTO orders (id,tenant_id,customer_id,workflow_id,public_code,source,transaction_type,status,subtotal_cents,delivery_cents,discount_cents,total_cents,fulfillment_type,notes) VALUES (?,?,?,?,?,?,'order',?,?,?,?,?,?,?)`).bind(orderId,tenantId,customerId,flow.workflow_id,publicCode,source,flow.step_key,preview.subtotal_cents,preview.delivery_cents,preview.discount_cents,preview.total_cents,preview.fulfillment_type,preview.notes),
     env.DB.prepare(`INSERT INTO order_events (id,order_id,event_type,to_status,actor_type,actor_id,payload_json) VALUES (?,?,'order.created',?,?,?,?)`).bind(makeId('evt'),orderId,flow.step_key,actor.type,actor.id,JSON.stringify({source}))
   ];
-  for(const item of preview.items){
-    statements.push(env.DB.prepare(`INSERT INTO order_items (id,order_id,catalog_item_id,name,qty,unit_price_cents,total_cents,options_json) VALUES (?,?,?,?,?,?,?,'{}')`).bind(makeId('line'),orderId,item.catalog_item_id,item.name,item.qty,item.unit_price_cents,item.total_cents));
-    if(item.stock_control)statements.push(env.DB.prepare(`UPDATE catalog_items SET stock_qty=stock_qty-?,updated_at=datetime('now') WHERE id=? AND tenant_id=? AND active=1 AND stock_control=1 AND stock_qty>=?`).bind(item.qty,item.catalog_item_id,tenantId,item.qty));
+  for(const item of preview.items)statements.push(env.DB.prepare(`INSERT INTO order_items (id,order_id,catalog_item_id,name,qty,unit_price_cents,total_cents,options_json) VALUES (?,?,?,?,?,?,?,'{}')`).bind(makeId('line'),orderId,item.catalog_item_id,item.name,item.qty,item.unit_price_cents,item.total_cents));
+  try{await env.DB.batch(statements);}catch(error){
+    const message=error instanceof Error?error.message:String(error);
+    if(message.includes('insufficient_controlled_stock')||message.includes('controlled_stock_cannot_be_negative'))throw new Error('Estoque alterado por outra venda. Revise o pedido e tente novamente.');
+    throw error;
   }
-  try{await env.DB.batch(statements);}catch(error){const message=error instanceof Error?error.message:String(error);if(message.includes('controlled_stock_cannot_be_negative'))throw new Error('Estoque alterado por outra venda. Revise o pedido e tente novamente.');throw error;}
   return{id:orderId,public_code:publicCode,status:flow.step_key,total_cents:preview.total_cents,workflow_id:flow.workflow_id};
 }
 
