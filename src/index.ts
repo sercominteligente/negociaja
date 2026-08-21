@@ -10,6 +10,7 @@ import {handleTeam} from './team';
 import {handlePlatform} from './platform';
 import {handleConversations} from './conversations';
 import {handleEvolution} from './evolution';
+import {handleEvolutionInbound} from './evolution-webhook';
 import {handleConversationMedia} from './conversation-media';
 import {handleMultimodal} from './multimodal';
 import {handleWebchat} from './webchat';
@@ -17,9 +18,19 @@ import {handleAgentTools} from './agent-tools';
 import {handleAgentRuntime} from './agent-runtime';
 import {consumeAgentQueue,AgentQueueJob} from './agent-queue';
 import {authenticate,Env,json} from './lib';
+import {guardRequest,secureResponse} from './security';
 
-export default {
-async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request.url);try{
+const DIRECT_PRIVATE:Record<string,string>={
+  '/app.html':'/app','/team.html':'/equipe','/super-admin.html':'/super-admin',
+  '/onboarding.html':'/onboarding','/channel-whatsapp.html':'/canal-whatsapp',
+  '/agent-actions.html':'/acoes-ia','/inbox.html':'/inbox'
+};
+
+async function route(request:Request,env:Env,url:URL):Promise<Response>{
+  const direct=DIRECT_PRIVATE[url.pathname];
+  if(direct)return Response.redirect(new URL(direct,url.origin).toString(),302);
+
+  const inbound=await handleEvolutionInbound(request,env,url);if(inbound)return inbound;
   const webchatResponse=await handleWebchat(request,env,url);if(webchatResponse)return webchatResponse;
   const evolutionResponse=await handleEvolution(request,env,url);if(evolutionResponse)return evolutionResponse;
   const multimodalResponse=await handleMultimodal(request,env,url);if(multimodalResponse)return multimodalResponse;
@@ -32,7 +43,9 @@ async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request
   const brandingResponse=await handleBranding(request,env,url);if(brandingResponse)return brandingResponse;
   const onboardingResponse=await handleOnboarding(request,env,url);if(onboardingResponse)return onboardingResponse;
   const apiResponse=await handleApi(request,env,url);if(apiResponse)return apiResponse;
-  const chatMatch=url.pathname.match(/^\/chat\/([^/]+)\/?$/);if(chatMatch)return env.ASSETS.fetch(new Request(new URL(`/webchat.html?tenant=${encodeURIComponent(chatMatch[1])}`,url.origin),request));
+
+  const chatMatch=url.pathname.match(/^\/chat\/([^/]+)\/?$/);
+  if(chatMatch)return env.ASSETS.fetch(new Request(new URL(`/webchat.html?tenant=${encodeURIComponent(chatMatch[1])}`,url.origin),request));
   if(url.pathname==='/login'||url.pathname==='/login/'){const actor=await authenticate(request,env);if(actor)return Response.redirect(new URL(actor.role==='super_admin'?'/super-admin':'/app',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/login.html',url.origin),request));}
   if(url.pathname==='/cadastro'||url.pathname==='/cadastro/')return env.ASSETS.fetch(new Request(new URL('/signup.html',url.origin),request));
   if(url.pathname==='/confirmar-email'||url.pathname==='/confirmar-email/')return env.ASSETS.fetch(new Request(new URL('/verify-email.html',url.origin),request));
@@ -45,6 +58,20 @@ async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request
   if(url.pathname==='/inbox'||url.pathname==='/inbox/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/inbox.html',url.origin),request));}
   if(url.pathname==='/app'||url.pathname==='/app/'){const actor=await authenticate(request,env);if(!actor)return Response.redirect(new URL('/login',url.origin).toString(),302);if(actor.role==='super_admin'&&!actor.tenantId)return Response.redirect(new URL('/super-admin',url.origin).toString(),302);return env.ASSETS.fetch(new Request(new URL('/app.html',url.origin),request));}
   return env.ASSETS.fetch(request);
-}catch(error){console.error('NegocIAJá error',error);return url.pathname.startsWith('/api/')||url.pathname.startsWith('/webhooks/')?json({error:'Erro interno.',requestId:crypto.randomUUID()},500):new Response('NegocIAJá temporariamente indisponível.',{status:500});}},
-async queue(batch:MessageBatch<AgentQueueJob>,env:Env):Promise<void>{await consumeAgentQueue(batch,env);}
+}
+
+export default {
+  async fetch(request:Request,env:Env):Promise<Response>{
+    const url=new URL(request.url);
+    try{
+      const blocked=guardRequest(request,url);
+      if(blocked)return secureResponse(blocked,url);
+      return secureResponse(await route(request,env,url),url);
+    }catch(error){
+      console.error(JSON.stringify({event:'request_failed',path:url.pathname,error:error instanceof Error?error.message:String(error)}));
+      const response=url.pathname.startsWith('/api/')||url.pathname.startsWith('/webhooks/')?json({error:'Erro interno.',requestId:crypto.randomUUID()},500):new Response('NegocIAJá temporariamente indisponível.',{status:500});
+      return secureResponse(response,url);
+    }
+  },
+  async queue(batch:MessageBatch<AgentQueueJob>,env:Env):Promise<void>{await consumeAgentQueue(batch,env);}
 };
