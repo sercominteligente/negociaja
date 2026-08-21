@@ -76,6 +76,30 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     return json({ data: { id, name } }, 201);
   }
 
+  const catalogRoute = url.pathname.match(/^\/api\/catalog\/([^/]+)$/);
+  if (method === 'PATCH' && catalogRoute) {
+    const input = await body(request);
+    const id = catalogRoute[1];
+    const current = await env.DB.prepare(`SELECT id, name, item_type, category, price_cents, stock_control, stock_qty, active
+      FROM catalog_items WHERE id = ? AND tenant_id = ? LIMIT 1`).bind(id, tenantId)
+      .first<{id:string;name:string;item_type:string;category:string|null;price_cents:number;stock_control:number;stock_qty:number;active:number}>();
+    if (!current) return json({ error: 'Item não encontrado.' }, 404);
+
+    const name = input.name === undefined ? current.name : String(input.name || '').trim();
+    if (!name) return json({ error: 'Nome do item é obrigatório.' }, 400);
+    const itemType = input.item_type === undefined ? current.item_type : String(input.item_type || 'product');
+    const category = input.category === undefined ? current.category : (input.category ? String(input.category) : null);
+    const priceCents = input.price_cents === undefined ? current.price_cents : cents(input.price_cents);
+    const stockControl = input.stock_control === undefined ? current.stock_control : (input.stock_control ? 1 : 0);
+    const stockQty = input.stock_qty === undefined ? current.stock_qty : Math.max(0, Number(input.stock_qty || 0));
+    const active = input.active === undefined ? current.active : (input.active ? 1 : 0);
+
+    await env.DB.prepare(`UPDATE catalog_items SET name = ?, item_type = ?, category = ?, price_cents = ?,
+      stock_control = ?, stock_qty = ?, active = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?`)
+      .bind(name, itemType, category, priceCents, stockControl, stockQty, active, id, tenantId).run();
+    return json({ data: { id, name, active: Boolean(active) } });
+  }
+
   if (method === 'GET' && url.pathname === '/api/orders') {
     const result = await env.DB.prepare(`SELECT o.id, o.public_code, o.transaction_type, o.status, o.source,
       o.total_cents, o.payment_status, o.fulfillment_type, o.created_at,
