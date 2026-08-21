@@ -15,6 +15,7 @@ import {handleEvolutionInbound} from './evolution-webhook';
 import {handleConversationMedia} from './conversation-media';
 import {handleMultimodal} from './multimodal';
 import {handleWebchat} from './webchat';
+import {handleAgentApproval} from './agent-approval';
 import {handleAgentTools} from './agent-tools';
 import {handleAgentRuntime} from './agent-runtime';
 import {consumeAgentQueue,AgentQueueJob} from './agent-queue';
@@ -37,6 +38,7 @@ async function route(request:Request,env:Env,url:URL):Promise<Response>{
   const multimodalResponse=await handleMultimodal(request,env,url);if(multimodalResponse)return multimodalResponse;
   const mediaResponse=await handleConversationMedia(request,env,url);if(mediaResponse)return mediaResponse;
   const agentRuntimeResponse=await handleAgentRuntime(request,env,url);if(agentRuntimeResponse)return agentRuntimeResponse;
+  const approvalResponse=await handleAgentApproval(request,env,url);if(approvalResponse)return approvalResponse;
   const agentToolsResponse=await handleAgentTools(request,env,url);if(agentToolsResponse)return agentToolsResponse;
   const conversationResponse=await handleConversations(request,env,url);if(conversationResponse)return conversationResponse;
   const platformResponse=await handlePlatform(request,env,url);if(platformResponse)return platformResponse;
