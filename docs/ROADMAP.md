@@ -20,8 +20,10 @@
 - [x] confirmação real de e-mail com token armazenado somente como hash
 - [x] ativação automática de trial após confirmação
 - [x] fila de notificação de e-mail com envio via Resend quando configurado
-- [ ] onboarding da empresa
-- [ ] personalização por empresa (logo, cores e dados)
+- [x] onboarding base da empresa
+- [x] dados empresariais, segmento, WhatsApp e cores no onboarding
+- [ ] upload de logotipo e arquivos de branding para R2
+- [ ] personalização completa por empresa
 - [ ] gestão visual de usuários e permissões
 - [ ] seletor operacional de tenant para Super Admin
 
