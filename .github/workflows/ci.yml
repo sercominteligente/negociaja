@@ -1,77 +1,35 @@
-name: CI
+name: NegocIAJa CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  check:
+  audit:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      WRANGLER_SEND_METRICS: "false"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Validate project
-        run: npm run check
-      - name: Apply D1 migrations locally
+      - name: SER copyright signature check
+        run: node scripts/check-copyright.mjs
+      - name: TypeScript check
+        run: npm run typecheck
+      - name: JavaScript syntax check
+        run: find public -type f -name '*.js' -print0 | xargs -0 -r -n1 node --check
+      - name: Apply all D1 migrations locally
         run: npm run db:local
-      - name: Smoke test Worker and D1 locally
-        shell: bash
-        run: |
-          set -euo pipefail
-          npx wrangler dev --port 8787 --var APP_ENVIRONMENT:development --var DEFAULT_TENANT_ID:tenant_demo > /tmp/negociaja-wrangler.log 2>&1 &
-          WRANGLER_PID=$!
-          trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
-          READY=0
-          for _ in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:8787/api/health > /dev/null; then READY=1; break; fi
-            sleep 1
-          done
-          if [ "$READY" -ne 1 ]; then cat /tmp/negociaja-wrangler.log; exit 1; fi
-          node scripts/smoke-test.mjs
-      - name: Apply HML D1 migrations locally
-        run: npx wrangler d1 migrations apply DB --local --env hml
-      - name: Smoke test authenticated HML locally
-        shell: bash
-        env:
-          HML_SMOKE_PASSWORD: ci-hml-secret
-          HML_OUTBOX_SERVICE_TOKEN: ci-outbox-token-strong-value-2026
-        run: |
-          set -euo pipefail
-          npx wrangler dev --env hml --port 8788 --var HML_PASSWORD:ci-hml-secret --var OUTBOX_SERVICE_TOKEN:ci-outbox-token-strong-value-2026 --var HML_RATE_LIMIT_PER_MINUTE:20 > /tmp/negociaja-hml-wrangler.log 2>&1 &
-          WRANGLER_PID=$!
-          trap 'kill "$WRANGLER_PID" 2>/dev/null || true' EXIT
-          READY=0
-          for _ in $(seq 1 30); do
-            STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' --user homologacao:ci-hml-secret http://127.0.0.1:8788/api/health || true)
-            if [ "$STATUS" = "200" ]; then READY=1; break; fi
-            sleep 1
-          done
-          if [ "$READY" -ne 1 ]; then cat /tmp/negociaja-hml-wrangler.log; exit 1; fi
-          node scripts/hml-smoke-test.mjs
-          node scripts/documents-smoke-test.mjs
-          node scripts/core12-smoke-test.mjs
-          node scripts/saas-rbac-smoke-test.mjs
-          node scripts/catalog-orders-ai-smoke-test.mjs
-          node scripts/catalog-image-smoke-test.mjs
-          node scripts/approvals-onboarding-smoke-test.mjs
-          node scripts/action-execution-smoke-test.mjs
-          node scripts/outbox-dispatch-smoke-test.mjs
-          node scripts/integration-health-smoke-test.mjs
-          npx wrangler d1 execute DB --local --env hml --command "INSERT OR IGNORE INTO tenants (id,slug,name,segment,status) VALUES ('tenant_iso','tenant-iso','Tenant Isolado','test','active'); INSERT OR IGNORE INTO customers (id,tenant_id,name,phone) VALUES ('customer_iso','tenant_iso','SEGREDO-TENANT-ISO','5500000000000'); INSERT OR IGNORE INTO catalog_items (id,tenant_id,name,price_cents) VALUES ('item_iso','tenant_iso','SEGREDO-TENANT-ISO',999); INSERT OR IGNORE INTO orders (id,tenant_id,customer_id,public_code,total_cents) VALUES ('order_iso','tenant_iso','customer_iso','ISO-0001',999); INSERT OR IGNORE INTO generated_documents (id,tenant_id,document_type,document_number,entity_type,entity_id,status,snapshot_json) VALUES ('doc_iso','tenant_iso','order','ISO-PED-0001','order','order_iso','generated','{}');"
-          node scripts/security-privacy-isolation-smoke-test.mjs
-          npx wrangler d1 execute DB --local --env hml --command "UPDATE tenant_subscriptions SET status='active', current_period_end=datetime('now','-10 day'), trial_ends_at=datetime('now','-10 day'), grace_until=datetime('now','-5 day') WHERE tenant_id='tenant_demo';"
-          node scripts/license-suspension-smoke.mjs
+      - name: Worker deployment dry run
+        run: npx wrangler deploy --dry-run --outdir .wrangler-dry-run

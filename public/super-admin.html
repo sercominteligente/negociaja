@@ -1,58 +1,6 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#071A43">
-  <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>Super Admin • NegocIAJá!</title>
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/super-admin.css">
-  <style>.official-sa-logo{display:block;width:176px;max-width:100%;height:auto;object-fit:contain}@media(max-width:760px){.official-sa-logo{width:164px}}</style>
-</head>
-<body class="sa-body">
-  <aside class="sa-sidebar" id="saSidebar">
-    <a class="sa-brand" href="#overview" aria-label="NegocIAJá!"><img class="official-sa-logo" src="/brand/logo-primary.webp" alt="NegocIAJá!"></a>
-    <nav class="sa-nav" id="saNav">
-      <a class="active" href="#overview" data-view="overview">◈ <span>Visão geral</span></a>
-      <a href="#tenants" data-view="tenants">▦ <span>Empresas</span></a>
-      <a href="#plans" data-view="plans">◇ <span>Planos</span></a>
-      <a href="#subscriptions" data-view="subscriptions">◫ <span>Assinaturas</span></a>
-      <a href="#users" data-view="users">♙ <span>Usuários</span></a>
-      <a href="#agents" data-view="agents">✦ <span>Agentes IA</span></a>
-      <a href="#channels" data-view="channels">◉ <span>Canais</span></a>
-      <a href="#integrations" data-view="integrations">⌁ <span>Integrações</span></a>
-      <a href="#usage" data-view="usage">⌁ <span>Consumo IA</span></a>
-      <a href="#billing" data-view="billing">R$ <span>Faturamento</span></a>
-      <a href="#health" data-view="health">♥ <span>Saúde</span></a>
-      <a href="#logs" data-view="logs">≡ <span>Logs</span></a>
-      <a href="#settings" data-view="settings">⚙ <span>Configurações</span></a>
-      <a href="/integration-health.html">♥ <span>Saúde detalhada</span></a>
-      <a href="/release-readiness.html">✓ <span>Prontidão HML</span></a>
-    </nav>
-    <div class="sa-sidebar-foot"><i></i><div><strong>Plataforma</strong><small id="saEnvironment">HML</small></div></div>
-  </aside>
-  <main class="sa-main">
-    <header class="sa-topbar"><button id="saMenu" class="sa-menu" type="button">☰</button><div><span class="sa-eyebrow">NEGOCIAJÁ! SUPER ADMIN</span><h1 id="saTitle">Visão geral</h1></div><div class="sa-operator"><span id="saInitial">S</span><div><strong id="saEmail">Super Admin</strong><small id="saRole">super_admin</small></div></div></header>
-    <section class="sa-view active" data-panel="overview"><div class="sa-hero"><div><span class="sa-eyebrow">CONTROLE DA PLATAFORMA</span><h2>Todos os negócios. Um único cockpit.</h2><p>Empresas, usuários, canais, IA, integrações, cobrança e saúde operacional.</p></div><button class="sa-primary" id="newTenantBtn" type="button">+ Nova empresa</button></div><div class="sa-metrics" id="overviewMetrics"><div class="sa-skeleton">Carregando métricas…</div></div><div class="sa-two"><article class="sa-card"><div class="sa-card-head"><div><span class="sa-eyebrow">EMPRESAS</span><h3>Operação por tenant</h3></div><button class="sa-link" data-jump="tenants">Ver todas</button></div><div id="overviewTenants"></div></article><article class="sa-card"><div class="sa-card-head"><div><span class="sa-eyebrow">SAÚDE</span><h3>Integrações críticas</h3></div><button class="sa-link" data-jump="health">Diagnóstico</button></div><div id="overviewHealth"></div></article></div></section>
-    <section class="sa-view" data-panel="tenants"><div class="sa-section-head"><div><span class="sa-eyebrow">TENANTS</span><h2>Empresas</h2><p>Ative, bloqueie, acompanhe plano, equipe, canais, agentes e vendas.</p></div><button class="sa-primary" id="newTenantBtn2">+ Nova empresa</button></div><div class="sa-card"><div class="sa-table-wrap"><table><thead><tr><th>Empresa</th><th>Plano</th><th>Usuários</th><th>Canais</th><th>Agentes</th><th>Vendas</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tenantsBody"></tbody></table></div></div></section>
-    <section class="sa-view" data-panel="plans"><div class="sa-section-head"><div><span class="sa-eyebrow">COMERCIAL</span><h2>Planos</h2><p>Pacotes, limites, recursos e precificação.</p></div><button class="sa-primary" id="newPlanBtn">+ Novo plano</button></div><div class="sa-grid" id="plansGrid"></div></section>
-    <section class="sa-view" data-panel="subscriptions"><div class="sa-section-head"><div><span class="sa-eyebrow">RECORRÊNCIA</span><h2>Assinaturas</h2><p>Status comercial de cada empresa.</p></div></div><div class="sa-card"><div class="sa-table-wrap"><table><thead><tr><th>Empresa</th><th>Plano</th><th>Status</th><th>Trial</th><th>Fim do período</th><th>Mensalidade</th></tr></thead><tbody id="subscriptionsBody"></tbody></table></div></div></section>
-    <section class="sa-view" data-panel="users"><div class="sa-section-head"><div><span class="sa-eyebrow">IDENTIDADE & RBAC</span><h2>Usuários</h2><p>Super admins, admins de empresa, operadores e visualizadores.</p></div><button class="sa-primary" id="newUserBtn">+ Novo usuário</button></div><div class="sa-card"><div class="sa-table-wrap"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Papel global</th><th>Empresas / papel</th><th>Status</th></tr></thead><tbody id="usersBody"></tbody></table></div></div></section>
-    <section class="sa-view" data-panel="agents"><div class="sa-section-head"><div><span class="sa-eyebrow">IA</span><h2>Agentes IA</h2><p>Agentes por empresa, função, provedor e modelo.</p></div></div><div class="sa-grid" id="agentsGrid"></div></section>
-    <section class="sa-view" data-panel="channels"><div class="sa-section-head"><div><span class="sa-eyebrow">CANAIS</span><h2>WhatsApp & Telegram</h2><p>Instâncias e canais conectados por tenant.</p></div></div><div class="sa-grid" id="channelsGrid"></div></section>
-    <section class="sa-view" data-panel="integrations"><div class="sa-section-head"><div><span class="sa-eyebrow">ECOSSISTEMA</span><h2>Integrações</h2><p>Evolution, n8n, pagamentos, logística e conectores externos.</p></div></div><div class="sa-grid" id="integrationsGrid"></div></section>
-    <section class="sa-view" data-panel="usage"><div class="sa-section-head"><div><span class="sa-eyebrow">CUSTO & CAPACIDADE</span><h2>Consumo de IA</h2><p>Texto, áudio, imagem e demais modalidades por empresa.</p></div></div><div class="sa-card"><div class="sa-table-wrap"><table><thead><tr><th>Empresa</th><th>Modalidade</th><th>Requisições</th><th>Entrada</th><th>Saída</th><th>Custo estimado</th></tr></thead><tbody id="usageBody"></tbody></table></div></div></section>
-    <section class="sa-view" data-panel="billing"><div class="sa-section-head"><div><span class="sa-eyebrow">RECEITA DA PLATAFORMA</span><h2>Faturamento</h2><p>Eventos financeiros e cobranças SaaS.</p></div></div><div class="sa-card"><div class="sa-table-wrap"><table><thead><tr><th>Empresa</th><th>Evento</th><th>Valor</th><th>Status</th><th>Vencimento</th><th>Pago em</th></tr></thead><tbody id="billingBody"></tbody></table></div></div></section>
-    <section class="sa-view" data-panel="health"><div class="sa-section-head"><div><span class="sa-eyebrow">OBSERVABILIDADE</span><h2>Saúde das integrações</h2><p>Estados healthy, degraded e down registrados pelos conectores.</p></div></div><div class="sa-grid" id="healthGrid"></div></section>
-    <section class="sa-view" data-panel="logs"><div class="sa-section-head"><div><span class="sa-eyebrow">AUDITORIA</span><h2>Logs</h2><p>Eventos administrativos e operacionais relevantes.</p></div></div><div class="sa-card"><div class="sa-table-wrap"><table><thead><tr><th>Quando</th><th>Empresa</th><th>Ator</th><th>Ação</th><th>Entidade</th></tr></thead><tbody id="logsBody"></tbody></table></div></div></section>
-    <section class="sa-view" data-panel="settings"><div class="sa-section-head"><div><span class="sa-eyebrow">PLATAFORMA</span><h2>Configurações globais</h2><p>Marca, feature flags e políticas que afetam todo o SaaS.</p></div></div><div class="sa-two"><article class="sa-card"><h3>Configurações</h3><div id="settingsList"></div></article><article class="sa-card"><h3>Feature flags</h3><div id="flagsList"></div></article></div></section>
-  </main>
-  <div class="sa-modal" id="tenantModal" hidden><div class="sa-modal-box"><button data-close class="sa-close">×</button><span class="sa-eyebrow">NOVO TENANT</span><h2>Nova empresa</h2><form id="tenantForm"><label>Nome<input name="name" required maxlength="160"></label><label>Slug<input name="slug" required maxlength="80" placeholder="minha-empresa"></label><label>Segmento<select name="segment"><option value="loja">Loja / varejo</option><option value="delivery">Delivery</option><option value="comunicacao-visual">Comunicação visual</option><option value="servicos">Serviços</option><option value="personalizado">Personalizado</option></select></label><label>Plano<select name="plan_id" id="tenantPlan"></select></label><button class="sa-primary" type="submit">Criar empresa</button></form></div></div>
-  <div class="sa-modal" id="userModal" hidden><div class="sa-modal-box"><button data-close class="sa-close">×</button><span class="sa-eyebrow">RBAC</span><h2>Novo usuário</h2><form id="userForm"><label>Nome<input name="name" required></label><label>E-mail<input name="email" type="email" required></label><label>Papel global<select name="global_role"><option value="member">Membro</option><option value="support">Suporte</option><option value="super_admin">Super Admin</option></select></label><label>Empresa<select name="tenant_id" id="userTenant"><option value="">Sem empresa</option></select></label><label>Papel na empresa<select name="role"><option value="operator">Operador</option><option value="manager">Gerente</option><option value="admin">Admin</option><option value="owner">Proprietário</option><option value="viewer">Somente leitura</option></select></label><button class="sa-primary" type="submit">Salvar usuário</button></form></div></div>
-  <div class="sa-modal" id="planModal" hidden><div class="sa-modal-box"><button data-close class="sa-close">×</button><span class="sa-eyebrow">PLANO</span><h2>Novo plano</h2><form id="planForm"><label>Nome<input name="name" required></label><label>Slug<input name="slug" required></label><label>Mensalidade (R$)<input name="price" type="number" min="0" step="0.01" required></label><label>Descrição<textarea name="description" rows="3"></textarea></label><button class="sa-primary" type="submit">Criar plano</button></form></div></div>
-  <div class="sa-toast" id="saToast"></div>
-  <script src="/super-admin.js"></script>
-  <script src="/super-admin-saas.js"></script>
-</body>
-</html>
+<!--
+  NegocIAJá! — desenvolvido pela SER Comunicação
+  CNPJ 23.296.513/0001-97
+  Todos os direitos reservados.
+-->
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0B2B7C"><title>Super Admin • NegocIAJá!</title><link rel="stylesheet" href="/styles.css"><style>.sa{max-width:1100px;margin:auto;padding:40px 20px}.sa-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.tenant{background:#fff;border:1px solid #e4eaf3;border-radius:20px;padding:18px;display:grid;gap:8px}.tenant small{color:#667085}.sa-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}.sa-actions{display:flex;gap:8px;flex-wrap:wrap}@media(max-width:760px){.sa-grid{grid-template-columns:1fr}.sa-head{align-items:flex-start;flex-direction:column}}</style></head><body class="landing"><main class="sa"><div class="sa-head"><div><a class="brand-word" href="/">Negoc<span>IA</span><b>Já!</b></a><h1>Super Admin</h1><p>Empresas, mídia institucional e saúde da plataforma.</p></div><div class="sa-actions"><a class="btn soft" href="/marketing">Landing e vídeo</a><a class="btn soft" href="/operacoes">Saúde operacional</a><button class="touch soft-button" id="logoutBtn">Sair</button></div></div><div id="saStatus" class="auth-status"></div><section id="tenantGrid" class="sa-grid">Carregando empresas…</section></main><script src="/super-admin.js"></script></body></html>

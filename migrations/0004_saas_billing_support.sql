@@ -1,5 +1,7 @@
 PRAGMA foreign_keys = ON;
 
+-- NegocIAJa SaaS lifecycle, billing and in-product support foundation.
+
 CREATE TABLE IF NOT EXISTS platform_plans (
   id TEXT PRIMARY KEY,
   slug TEXT NOT NULL UNIQUE,
@@ -33,6 +35,7 @@ CREATE TABLE IF NOT EXISTS tenant_subscriptions (
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
   FOREIGN KEY (plan_id) REFERENCES platform_plans(id)
 );
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status_end ON tenant_subscriptions(status, current_period_end);
 
 CREATE TABLE IF NOT EXISTS billing_invoices (
   id TEXT PRIMARY KEY,
@@ -51,6 +54,7 @@ CREATE TABLE IF NOT EXISTS billing_invoices (
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
   FOREIGN KEY (subscription_id) REFERENCES tenant_subscriptions(id) ON DELETE SET NULL
 );
+CREATE INDEX IF NOT EXISTS idx_billing_invoices_tenant_status ON billing_invoices(tenant_id, status, due_at);
 
 CREATE TABLE IF NOT EXISTS billing_payments (
   id TEXT PRIMARY KEY,
@@ -101,6 +105,7 @@ CREATE TABLE IF NOT EXISTS email_verifications (
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS idx_email_verification_email ON email_verifications(email, expires_at);
 
 CREATE TABLE IF NOT EXISTS notification_preferences (
   tenant_id TEXT PRIMARY KEY,
@@ -126,6 +131,7 @@ CREATE TABLE IF NOT EXISTS notification_deliveries (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS idx_notification_delivery_status ON notification_deliveries(status, created_at);
 
 CREATE TABLE IF NOT EXISTS tenant_payment_accounts (
   id TEXT PRIMARY KEY,
@@ -200,7 +206,9 @@ CREATE TABLE IF NOT EXISTS support_tickets (
   FOREIGN KEY (thread_id) REFERENCES support_threads(id) ON DELETE SET NULL,
   FOREIGN KEY (requester_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status, priority, created_at);
 
 INSERT OR IGNORE INTO platform_plans
 (id, slug, name, price_cents, billing_cycle, trial_days, grace_days, limits_json, features_json)
-VALUES ('plan_hml','hml','Homologacao',0,'monthly',30,7,'{}','{"hml":true,"multimodal":true,"support_ai":true}');
+VALUES
+('plan_hml','hml','Homologacao',0,'monthly',30,7,'{}','{"hml":true,"multimodal":true,"support_ai":true}');

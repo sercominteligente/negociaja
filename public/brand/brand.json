@@ -1,7 +1,0 @@
-{
-  "brand":"NegocIAJá!",
-  "slogan":"Quer vender mais? NegocIAJá!",
-  "colors":{"navy":"#0B2B7C","electricBlue":"#169CFF","cyan":"#25D9FF","yellow":"#FFC107","orange":"#FF9800","white":"#FFFFFF","ink":"#071A43","surface":"#F7FAFF"},
-  "ui":{"touchTargetMin":"44px","radiusButton":"14px","radiusCard":"20px","fontStack":"Inter, Manrope, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"},
-  "approvedLogos":["logo-primary-with-slogan","logo-primary","logo-stacked","logo-monochrome-navy","logo-reverse-dark-bg"]
-}
