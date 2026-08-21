@@ -31,12 +31,16 @@
 
 ## Fase 2 — Conversação
 - [x] Conversation Hub — núcleo de conversas, mensagens e eventos
-- [ ] WhatsApp/Evolution
+- [x] Inbox visual com histórico e takeover
+- [x] WhatsApp/Evolution — adapter inbound/outbound base
+- [x] webhook por tenant com token hash e idempotência de mensagem
+- [x] credencial Evolution criptografada com AES-GCM
+- [x] mídia inbound base64 armazenada no R2
 - [ ] webchat
-- [ ] texto, áudio e imagem
+- [~] texto, áudio e imagem — texto completo; recepção/armazenamento de mídia pronto
 - [ ] transcrição de áudio
 - [ ] análise de imagem
-- [x] human takeover — fundação API take/release/assignment
+- [x] human takeover — assumir, devolver à IA, assignment e encerramento
 - [ ] Agent Tool Gateway
 
 ## Fase 3 — Venda completa
