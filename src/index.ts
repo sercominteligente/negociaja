@@ -10,10 +10,12 @@ import {handleTeam} from './team';
 import {handlePlatform} from './platform';
 import {handleConversations} from './conversations';
 import {handleEvolution} from './evolution';
+import {handleConversationMedia} from './conversation-media';
 import {authenticate,Env,json} from './lib';
 
 export default {async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request.url);try{
   const evolutionResponse=await handleEvolution(request,env,url);if(evolutionResponse)return evolutionResponse;
+  const mediaResponse=await handleConversationMedia(request,env,url);if(mediaResponse)return mediaResponse;
   const conversationResponse=await handleConversations(request,env,url);if(conversationResponse)return conversationResponse;
   const platformResponse=await handlePlatform(request,env,url);if(platformResponse)return platformResponse;
   const teamResponse=await handleTeam(request,env,url);if(teamResponse)return teamResponse;
