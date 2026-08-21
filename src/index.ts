@@ -14,6 +14,7 @@ import {handleConversationMedia} from './conversation-media';
 import {handleMultimodal} from './multimodal';
 import {handleWebchat} from './webchat';
 import {handleAgentTools} from './agent-tools';
+import {handleAgentRuntime} from './agent-runtime';
 import {authenticate,Env,json} from './lib';
 
 export default {async fetch(request:Request,env:Env):Promise<Response>{const url=new URL(request.url);try{
@@ -21,6 +22,7 @@ export default {async fetch(request:Request,env:Env):Promise<Response>{const url
   const evolutionResponse=await handleEvolution(request,env,url);if(evolutionResponse)return evolutionResponse;
   const multimodalResponse=await handleMultimodal(request,env,url);if(multimodalResponse)return multimodalResponse;
   const mediaResponse=await handleConversationMedia(request,env,url);if(mediaResponse)return mediaResponse;
+  const agentRuntimeResponse=await handleAgentRuntime(request,env,url);if(agentRuntimeResponse)return agentRuntimeResponse;
   const agentToolsResponse=await handleAgentTools(request,env,url);if(agentToolsResponse)return agentToolsResponse;
   const conversationResponse=await handleConversations(request,env,url);if(conversationResponse)return conversationResponse;
   const platformResponse=await handlePlatform(request,env,url);if(platformResponse)return platformResponse;
