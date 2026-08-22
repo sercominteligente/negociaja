@@ -6,6 +6,7 @@
 import {Env,audit,authenticate,body,cents,hasRole,json,makeId,resolveTenant} from './lib';
 import {handleAuth} from './auth';
 import {handleEnhancedSignup} from './signup-enhanced';
+import {ensureAuthSchema} from './auth-schema';
 
 const ITEM_TYPES=new Set(['product','service','combo']);
 const EXPECTED_SCHEMA_MIGRATION='0024_platform_testimonials.sql';
@@ -38,6 +39,13 @@ export async function handleApi(request:Request,env:Env,url:URL):Promise<Respons
   if(method==='GET'&&url.pathname==='/api/health'){
     const db=await d1Health(env);
     return json({ok:db.ready,app:'NegocIAJá!',version:'0.4.0',db,now:new Date().toISOString()},db.ready?200:503);
+  }
+
+  if(url.pathname.startsWith('/api/auth/')){
+    try{await ensureAuthSchema(env);}catch(error){
+      console.error(JSON.stringify({event:'auth_schema_repair_failed',path:url.pathname,error:error instanceof Error?error.message:String(error)}));
+      return json({error:'Não foi possível preparar o acesso agora. Tente novamente em alguns instantes.',code:'AUTH_SCHEMA_UNAVAILABLE'},503);
+    }
   }
 
   const enhancedSignup=await handleEnhancedSignup(request,env,url);if(enhancedSignup)return enhancedSignup;
