@@ -27,7 +27,11 @@ export async function handleEnhancedSignup(request:Request,env:Env,url:URL):Prom
   if(requested==='other'&&(other.length<2||other.length>100))return json({error:'Informe o segmento da sua empresa.'},400);
   const coreSegment=SEGMENT_CORE[requested],segmentLabel=requested==='other'?other:(providedLabel||requested).slice(0,120);
   try{
-    const existingEmail=await env.DB.prepare('SELECT id FROM users WHERE lower(email)=? LIMIT 1').bind(email).first<{id:string}>();if(existingEmail)return json({error:'Já existe um cadastro com este e-mail.'},409);
+    const existingEmail=await env.DB.prepare('SELECT id,status FROM users WHERE lower(email)=? LIMIT 1').bind(email).first<{id:string;status:string}>();
+    if(existingEmail){
+      if(existingEmail.status==='pending_email')return json({error:'Seu cadastro já foi criado e está aguardando a confirmação do e-mail. Verifique sua caixa de entrada e também o spam.',code:'EMAIL_CONFIRMATION_PENDING'},409);
+      return json({error:'Já existe uma conta com este e-mail. Entre no painel para continuar.',code:'ACCOUNT_ALREADY_EXISTS'},409);
+    }
     let slugBase=slugify(companyName)||'empresa',slug=slugBase,suffix=1;while(await env.DB.prepare('SELECT id FROM tenants WHERE slug=? LIMIT 1').bind(slug).first())slug=`${slugBase}-${++suffix}`;
     const tenantId=makeId('tenant'),userId=makeId('user'),verificationId=makeId('verify'),rawToken=`${crypto.randomUUID()}${crypto.randomUUID()}`.replaceAll('-',''),tokenHash=await sha256(rawToken),credentials=await createPassword(password),expiresAt=new Date(Date.now()+VERIFY_TTL_HOURS*3600_000).toISOString();
     const hasSegmentLabel=await tableHasColumn(env,'tenant_settings','segment_label');
