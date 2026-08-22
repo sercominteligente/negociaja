@@ -95,7 +95,6 @@
 - [x] secrets fora do repositório
 - [x] documentação de configuração final
 - [x] estratégia de Worker único documentada
-- [x] PRs históricos empilhados #39–#56 encerrados como superseded após consolidação do código no `main`
 - [~] aplicar/conferir todas as migrations no D1 remoto de produção
 - [~] importar/configurar secrets e variáveis de produção
 - [~] criar Queue principal + DLQ e conectar `AGENT_QUEUE`
