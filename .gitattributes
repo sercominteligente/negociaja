@@ -1,0 +1,5 @@
+# Keep D1 migration files compatible with Wrangler remote migration parsing.
+*.sql text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
