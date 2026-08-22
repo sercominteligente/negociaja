@@ -6,6 +6,7 @@
 import {Env,audit,authenticate,body,cents,hasRole,json,makeId,resolveTenant} from './lib';
 import {handleAuth} from './auth';
 import {handleEnhancedSignup} from './signup-enhanced';
+import {handleEnhancedLogin} from './login-enhanced';
 import {ensureAuthSchema} from './auth-schema';
 
 const ITEM_TYPES=new Set(['product','service','combo']);
@@ -49,6 +50,7 @@ export async function handleApi(request:Request,env:Env,url:URL):Promise<Respons
   }
 
   const enhancedSignup=await handleEnhancedSignup(request,env,url);if(enhancedSignup)return enhancedSignup;
+  const enhancedLogin=await handleEnhancedLogin(request,env,url);if(enhancedLogin)return enhancedLogin;
   const authResponse=await handleAuth(request,env,url);if(authResponse)return authResponse;
   const actor=await authenticate(request,env);if(!actor)return json({error:'Sessão ausente ou expirada.'},401);
   const tenantId=await resolveTenant(request,env,actor);if(!tenantId)return json({error:actor.role==='super_admin'?'Selecione uma empresa válida.':'Empresa da sessão inválida.'},409);
