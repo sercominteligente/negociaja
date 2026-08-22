@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "db:local": "wrangler d1 migrations apply negocia-ja-bd --local",
     "db:remote": "wrangler d1 migrations apply negocia-ja-bd --remote",
+    "db:status:remote": "wrangler d1 migrations list negocia-ja-bd --remote",
+    "db:audit:remote": "node scripts/audit-d1-remote.mjs",
     "audit:worker": "node scripts/check-single-worker.mjs"
   },
   "devDependencies": {
