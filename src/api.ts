@@ -8,11 +8,37 @@ import {handleAuth} from './auth';
 import {handleEnhancedSignup} from './signup-enhanced';
 
 const ITEM_TYPES=new Set(['product','service','combo']);
+const EXPECTED_SCHEMA_MIGRATION='0024_platform_testimonials.sql';
+
+async function hasColumn(env:Env,table:string,column:string){
+  try{const result=await env.DB.prepare(`PRAGMA table_info(${table})`).all<{name:string}>();return (result.results||[]).some(row=>row.name===column);}catch{return false;}
+}
+async function d1Health(env:Env){
+  const checks={
+    users_password_hash:await hasColumn(env,'users','password_hash'),
+    users_email_verified_at:await hasColumn(env,'users','email_verified_at'),
+    tenant_settings_segment_label:await hasColumn(env,'tenant_settings','segment_label'),
+    subscriptions_status:await hasColumn(env,'tenant_subscriptions','status'),
+    email_verifications_token_hash:await hasColumn(env,'email_verifications','token_hash'),
+    notification_deliveries_status:await hasColumn(env,'notification_deliveries','status'),
+    auth_sessions_token_hash:await hasColumn(env,'auth_sessions','token_hash'),
+    audit_logs_actor_role:await hasColumn(env,'audit_logs','actor_role'),
+    audit_logs_metadata_json:await hasColumn(env,'audit_logs','metadata_json'),
+    platform_marketing_testimonials_title:await hasColumn(env,'platform_marketing','testimonials_title')
+  };
+  let latestMigration:string|null=null;
+  try{const latest=await env.DB.prepare('SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1').first<{name:string}>();latestMigration=latest?.name||null;}catch{}
+  const schemaChecksReady=Object.values(checks).every(Boolean);
+  return{ready:schemaChecksReady&&latestMigration===EXPECTED_SCHEMA_MIGRATION,latest_migration:latestMigration,expected_migration:EXPECTED_SCHEMA_MIGRATION,checks};
+}
 
 export async function handleApi(request:Request,env:Env,url:URL):Promise<Response|null>{
   if(!url.pathname.startsWith('/api/'))return null;
   const method=request.method.toUpperCase();
-  if(method==='GET'&&url.pathname==='/api/health')return json({ok:true,app:'NegocIAJá!',version:'0.4.0',now:new Date().toISOString()});
+  if(method==='GET'&&url.pathname==='/api/health'){
+    const db=await d1Health(env);
+    return json({ok:db.ready,app:'NegocIAJá!',version:'0.4.0',db,now:new Date().toISOString()},db.ready?200:503);
+  }
 
   const enhancedSignup=await handleEnhancedSignup(request,env,url);if(enhancedSignup)return enhancedSignup;
   const authResponse=await handleAuth(request,env,url);if(authResponse)return authResponse;
