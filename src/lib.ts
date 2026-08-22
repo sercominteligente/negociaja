@@ -28,7 +28,21 @@ export async function responseTextLimited(response:Response,max=4000){const text
 function cookieValue(request:Request,name:string){const cookie=request.headers.get('cookie')||'';for(const part of cookie.split(';')){const[key,...rest]=part.trim().split('=');if(key===name)return decodeURIComponent(rest.join('='));}return null;}
 export function sessionCookie(token:string,maxAge=SESSION_TTL_SECONDS){return`${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;}
 export function slugify(value:string){return value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50);}
-export async function audit(env:Env,actor:Actor|null,tenantId:string|null,action:string,entityType?:string,entityId?:string,metadata:Dict={}){await env.DB.prepare(`INSERT INTO audit_logs (id,tenant_id,actor_type,actor_id,actor_role,action,entity_type,entity_id,metadata_json) VALUES (?,?,?,?,?,?,?,?,?)`).bind(makeId('audit'),tenantId,actor?.actorType||'system',actor?.actorId||null,actor?.role||null,action,entityType||null,entityId||null,JSON.stringify(metadata)).run();}
+export async function audit(env:Env,actor:Actor|null,tenantId:string|null,action:string,entityType?:string,entityId?:string,metadata:Dict={}){
+  const id=makeId('audit'),actorType=actor?.actorType||'system',actorId=actor?.actorId||null,actorRole=actor?.role||null,payload=JSON.stringify(metadata);
+  try{
+    await env.DB.prepare(`INSERT INTO audit_logs (id,tenant_id,actor_type,actor_id,actor_role,action,entity_type,entity_id,metadata_json) VALUES (?,?,?,?,?,?,?,?,?)`).bind(id,tenantId,actorType,actorId,actorRole,action,entityType||null,entityId||null,payload).run();
+    return;
+  }catch(modernError){
+    try{
+      await env.DB.prepare(`INSERT INTO audit_logs (id,tenant_id,actor_type,actor_id,action,entity_type,entity_id,payload_json) VALUES (?,?,?,?,?,?,?,?)`).bind(id,tenantId,actorType,actorId,action,entityType||null,entityId||null,payload).run();
+      console.warn(JSON.stringify({event:'audit_legacy_schema',action,tenant_id:tenantId}));
+      return;
+    }catch(legacyError){
+      console.error(JSON.stringify({event:'audit_write_failed',action,tenant_id:tenantId,modern_error:modernError instanceof Error?modernError.message:String(modernError),legacy_error:legacyError instanceof Error?legacyError.message:String(legacyError)}));
+    }
+  }
+}
 
 async function expireTenantIfNeeded(env:Env,row:{tenant_id:string|null;tenant_status:string|null;subscription_status:string|null;trial_ends_at:string|null;current_period_end:string|null;grace_days:number|null}){
   if(!row.tenant_id||!['trial','active'].includes(row.tenant_status||''))return false;
