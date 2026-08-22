@@ -13,8 +13,20 @@ class SrcHandler {
   }
 }
 
+class HeroLogoHandler {
+  element(element:Element){
+    element.setAttribute('src','/logo-primary-with-slogan.png');
+    element.removeAttribute('hidden');
+    element.setAttribute('style','display:block;width:min(680px,100%);height:auto;max-width:100%;max-height:none;object-fit:contain;margin:10px auto 22px;');
+  }
+}
+
 class HideHandler {
   element(element:Element){element.setAttribute('hidden','');}
+}
+
+class RemoveHandler {
+  element(element:Element){element.remove();}
 }
 
 export async function renderPublicHome(request:Request,env:Env,url:URL):Promise<Response>{
@@ -22,7 +34,8 @@ export async function renderPublicHome(request:Request,env:Env,url:URL):Promise<
   if(!asset.ok)return asset;
   return new HTMLRewriter()
     .on('#logoHeader',new SrcHandler('/logo-primary.png'))
-    .on('#logoHero',new SrcHandler('/logo-primary-with-slogan.png'))
+    .on('.hero h1',new RemoveHandler())
+    .on('#logoHero',new HeroLogoHandler())
     .on('#logoPhone',new SrcHandler('/logo-monochrome-navy.png'))
     .on('#logoCta',new SrcHandler('/logo-reverse-dark-bg.png'))
     .on('#logoFooter',new SrcHandler('/logo-primary.png'))
